@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "heading": "Linked references",
+  "showHeading": true,
+  "showCount": true,
+  "showSourceHeading": true,
+  "groupBySource": true,
+  "showEmpty": false,
+  "contextMode": "normal",
+  "contextProfiles": {
+    "compact": {
+      "neighborBlocks": 0,
+      "maxChars": 400
+    },
+    "normal": {
+      "neighborBlocks": 1,
+      "maxChars": 900
+    },
+    "expanded": {
+      "neighborBlocks": 2,
+      "maxChars": 1600
+    }
+  },
+  "sortOrder": "newest",
+  "parseFilenameDates": true,
+  "dateFormats": [
+    "YYYY-MM-DD",
+    "YYYY-MM-DD dddd",
+    "YYYY.MM.DD"
+  ],
+  "dateProperty": "date",
+  "initialReferenceLimit": 15,
+  "includeEmbeds": false,
+  "openSourceOnExcerptClick": true,
+  "sourceFolderExclusions": [],
+  "targetFolderExclusions": [],
+  "debug": true,
+  "showAdvancedSettings": false,
+  "noteOverrides": {},
+  "collapsedTargets": []
+}

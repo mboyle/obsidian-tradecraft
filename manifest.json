@@ -1,0 +1,9 @@
+{
+  "id": "dossier",
+  "name": "Dossier",
+  "version": "0.2.4",
+  "minAppVersion": "1.7.2",
+  "description": "Read every backlink in the context where it was written.",
+  "author": "Michael Boyle",
+  "isDesktopOnly": false
+}
