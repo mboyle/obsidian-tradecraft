@@ -4,6 +4,7 @@ import { BacklinksRenderer, type RendererHost } from "./render/BacklinksRenderer
 import { createLivePreviewExtension } from "./render/LivePreviewExtension";
 import { ReadingModeRenderer } from "./render/ReadingModeRenderer";
 import { ReferenceNavigator } from "./render/ReferenceNavigator";
+import { reconcileRendererTargets } from "./render/RendererTargetReconciler";
 import { DailyNoteDisplayController } from "./dailyDates/DailyNoteDisplayController";
 import {
   DailyNoteDisplayService,
@@ -151,10 +152,20 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
       if (file instanceof TFile && file.extension === "md") void this.handleRename(file, oldPath);
     }));
     this.registerEvent(this.app.workspace.on("layout-change", () => {
+      reconcileRendererTargets(this.renderers, this.app.workspace);
       this.readingRenderer.reconcileEmptyViews(this.app.workspace);
     }));
     this.registerEvent(this.app.workspace.on("file-open", () => {
-      window.setTimeout(() => this.readingRenderer.reconcileEmptyViews(this.app.workspace), 0);
+      window.setTimeout(() => {
+        reconcileRendererTargets(this.renderers, this.app.workspace);
+        this.readingRenderer.reconcileEmptyViews(this.app.workspace);
+      }, 0);
+    }));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
+      window.setTimeout(() => {
+        reconcileRendererTargets(this.renderers, this.app.workspace);
+        this.readingRenderer.reconcileEmptyViews(this.app.workspace);
+      }, 0);
     }));
   }
 
@@ -291,7 +302,7 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
   private async toggleCurrentNote(file: TFile): Promise<void> {
     const frontmatterValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.["contextual-backlinks"];
     if (typeof frontmatterValue === "boolean") {
-      new Notice("Dossier: this note is controlled by its contextual-backlinks property.");
+      new Notice("Tradecraft: this note is controlled by its contextual-backlinks property.");
       return;
     }
     this.settings.noteOverrides[file.path] = !this.service.shouldRender(file);

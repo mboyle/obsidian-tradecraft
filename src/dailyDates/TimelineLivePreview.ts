@@ -34,10 +34,20 @@ interface DecorationRange {
 export interface TimelineLinkClick {
   target: string;
   event: MouseEvent;
+  targetEl: HTMLElement;
 }
 
 export interface TimelineLivePreviewOptions {
   onLinkClick?: (click: TimelineLinkClick) => void;
+  onLinkHover?: (click: TimelineLinkClick) => void;
+  onLinkContext?: (click: TimelineLinkClick) => void;
+  onTagClick?: (tag: string, event: MouseEvent) => void;
+  resolveEmbed?: (target: string) => TimelineEmbed | null;
+}
+
+export interface TimelineEmbed {
+  src: string;
+  kind: "image" | "audio" | "video" | "pdf";
 }
 
 const BULLET_PREFIX = /^(\s*)([-+*])\s+(?:\[([ xX])\]\s+)?(.*)$/;
@@ -153,14 +163,37 @@ function buildDecorations(
   options: TimelineLivePreviewOptions,
 ): DecorationSet {
   const ranges: DecorationRange[] = [];
+  let fenceCharacter: "`" | "~" | null = null;
   for (let number = 1; number <= view.state.doc.lines; number += 1) {
     const line = view.state.doc.line(number);
+    const fence = /^\s*(`{3,}|~{3,})/.exec(line.text)?.[1];
+    if (fenceCharacter !== null) {
+      decorateFencedCodeLine(view, line.from, line.to, Boolean(fence?.startsWith(fenceCharacter)), ranges);
+      if (fence?.startsWith(fenceCharacter)) fenceCharacter = null;
+      continue;
+    }
+    if (fence) {
+      fenceCharacter = fence[0] as "`" | "~";
+      decorateFencedCodeLine(view, line.from, line.to, true, ranges);
+      continue;
+    }
     decorateLine(view, line.from, line.to, line.text, ranges, options);
   }
   const sorted = ranges
     .map(({ from, to, decoration }) => decoration.range(from, to))
     .sort((left, right) => left.from - right.from || left.to - right.to);
   return Decoration.set(sorted, true);
+}
+
+function decorateFencedCodeLine(
+  view: EditorView,
+  from: number,
+  to: number,
+  delimiter: boolean,
+  ranges: DecorationRange[],
+): void {
+  addLineDecoration(from, `dossier-timeline-lp-codeblock${delimiter ? " is-delimiter" : ""}`, ranges);
+  if (delimiter && !selectionTouchesRange(view, from, to)) replace(from, to, undefined, ranges);
 }
 
 function decorateLine(
@@ -260,21 +293,36 @@ function decorateInlineSyntax(
   ranges: DecorationRange[],
   options: TimelineLivePreviewOptions,
 ): void {
+  const comments: Array<{ from: number; to: number }> = [];
+  forEachMatch(/%%([^\n]*?)%%/g, text, (match) => {
+    const start = lineFrom + match.index;
+    const end = start + match[0].length;
+    comments.push({ from: start, to: end });
+    if (selectionTouchesRange(view, start, end)) {
+      mark(start, end, "dossier-timeline-lp-comment", ranges);
+    } else {
+      replace(start, end, undefined, ranges);
+    }
+  });
+
   forEachMatch(/`([^`\n]+)`/g, text, (match) => {
     const raw = match[0];
     const start = lineFrom + match.index;
+    if (overlapsAny(start, start + raw.length, comments)) return;
     mark(start + 1, start + raw.length - 1, "dossier-timeline-lp-code", ranges);
     hidePairUnlessSelected(view, start, start + raw.length, 1, ranges);
   });
   forEachMatch(/~~([^~\n]+)~~/g, text, (match) => {
     const raw = match[0];
     const start = lineFrom + match.index;
+    if (overlapsAny(start, start + raw.length, comments)) return;
     mark(start + 2, start + raw.length - 2, "dossier-timeline-lp-strike", ranges);
     hidePairUnlessSelected(view, start, start + raw.length, 2, ranges);
   });
   forEachMatch(/(?:\*\*|__)(\S(?:.*?\S)?)(?:\*\*|__)/g, text, (match) => {
     const raw = match[0];
     const start = lineFrom + match.index;
+    if (overlapsAny(start, start + raw.length, comments)) return;
     mark(start + 2, start + raw.length - 2, "dossier-timeline-lp-strong", ranges);
     hidePairUnlessSelected(view, start, start + raw.length, 2, ranges);
   });
@@ -282,6 +330,7 @@ function decorateInlineSyntax(
     const prefix = match[1] ?? "";
     const start = lineFrom + match.index + prefix.length;
     const length = match[0].length - prefix.length;
+    if (overlapsAny(start, start + length, comments)) return;
     mark(start + 1, start + length - 1, "dossier-timeline-lp-em", ranges);
     hidePairUnlessSelected(view, start, start + length, 1, ranges);
   });
@@ -289,25 +338,85 @@ function decorateInlineSyntax(
     const prefix = match[1] ?? "";
     const start = lineFrom + match.index + prefix.length;
     const length = match[0].length - prefix.length;
+    if (overlapsAny(start, start + length, comments)) return;
     mark(start + 1, start + length - 1, "dossier-timeline-lp-em", ranges);
     hidePairUnlessSelected(view, start, start + length, 1, ranges);
   });
-  forEachMatch(/\[\[([^\]\n]+)\]\]/g, text, (match) => {
+
+  forEachMatch(/==([^=\n]+)==/g, text, (match) => {
+    const raw = match[0];
+    const start = lineFrom + match.index;
+    if (overlapsAny(start, start + raw.length, comments)) return;
+    mark(start + 2, start + raw.length - 2, "dossier-timeline-lp-highlight", ranges);
+    hidePairUnlessSelected(view, start, start + raw.length, 2, ranges);
+  });
+
+  forEachMatch(/(^|[^$])\$([^$\n]+)\$(?!\$)/g, text, (match) => {
+    const prefix = match[1] ?? "";
+    const start = lineFrom + match.index + prefix.length;
+    const length = match[0].length - prefix.length;
+    if (overlapsAny(start, start + length, comments)) return;
+    mark(start + 1, start + length - 1, "dossier-timeline-lp-math", ranges);
+    hidePairUnlessSelected(view, start, start + length, 1, ranges);
+  });
+
+  const links: Array<{ from: number; to: number }> = [];
+  forEachMatch(/(!?)\[\[([^\]\n]+)\]\]/g, text, (match) => {
     const start = lineFrom + match.index;
     const end = start + match[0].length;
-    const inside = match[1] ?? "";
+    if (overlapsAny(start, end, comments)) return;
+    links.push({ from: start, to: end });
+    const embedded = match[1] === "!";
+    const inside = match[2] ?? "";
     const separator = inside.indexOf("|");
     const target = separator < 0 ? inside : inside.slice(0, separator);
     const label = separator < 0 ? inside : inside.slice(separator + 1);
+    if (embedded && decorateEmbed(view, start, end, label, target, ranges, options)) return;
     decorateLink(view, start, end, label, target, false, ranges, options);
   });
-  forEachMatch(/\[([^\]\n]+)\]\(([^\n)]+)\)/g, text, (match) => {
+  forEachMatch(/(!?)\[([^\]\n]*)\]\(([^\n)]+)\)/g, text, (match) => {
     const start = lineFrom + match.index;
     const end = start + match[0].length;
-    const label = match[1] ?? "";
-    const target = (match[2] ?? "").replace(/^<|>$/g, "");
+    if (overlapsAny(start, end, comments) || overlapsAny(start, end, links)) return;
+    links.push({ from: start, to: end });
+    const embedded = match[1] === "!";
+    const label = match[2] ?? "";
+    const target = (match[3] ?? "").replace(/^<|>$/g, "");
+    if (embedded && decorateEmbed(view, start, end, label, target, ranges, options)) return;
     decorateLink(view, start, end, label, target, isExternalTarget(target), ranges, options);
   });
+
+  forEachMatch(/(^|[\s(])#([\p{L}\p{N}_\-/]*[\p{L}_\-/][\p{L}\p{N}_\-/]*)/gu, text, (match) => {
+    const prefix = match[1] ?? "";
+    const tag = match[2] ?? "";
+    const start = lineFrom + match.index + prefix.length;
+    const end = start + tag.length + 1;
+    if (overlapsAny(start, end, comments) || overlapsAny(start, end, links)) return;
+    if (selectionTouchesRange(view, start, end)) {
+      mark(start, end, "dossier-timeline-lp-tag", ranges);
+    } else {
+      replace(start, end, new TagWidget(tag, options.onTagClick), ranges);
+    }
+  });
+}
+
+function decorateEmbed(
+  view: EditorView,
+  from: number,
+  to: number,
+  label: string,
+  target: string,
+  ranges: DecorationRange[],
+  options: TimelineLivePreviewOptions,
+): boolean {
+  const embed = options.resolveEmbed?.(target);
+  if (!embed) return false;
+  if (selectionTouchesRange(view, from, to)) {
+    mark(from, to, "dossier-timeline-lp-link", ranges);
+  } else {
+    replace(from, to, new EmbedWidget(embed, label || target), ranges);
+  }
+  return true;
 }
 
 function decorateLink(
@@ -324,7 +433,11 @@ function decorateLink(
     mark(from, to, "dossier-timeline-lp-link", ranges);
     return;
   }
-  replace(from, to, new LinkWidget(label, target, external, options.onLinkClick), ranges);
+  replace(from, to, new LinkWidget(label, target, external, options), ranges);
+}
+
+function overlapsAny(from: number, to: number, ranges: Array<{ from: number; to: number }>): boolean {
+  return ranges.some((range) => from < range.to && to > range.from);
 }
 
 function isExternalTarget(target: string): boolean {
@@ -466,7 +579,7 @@ class LinkWidget extends WidgetType {
     private readonly label: string,
     private readonly target: string,
     private readonly external: boolean,
-    private readonly onClick: TimelineLivePreviewOptions["onLinkClick"],
+    private readonly options: TimelineLivePreviewOptions,
   ) {
     super();
   }
@@ -475,7 +588,9 @@ class LinkWidget extends WidgetType {
     return this.label === other.label
       && this.target === other.target
       && this.external === other.external
-      && this.onClick === other.onClick;
+      && this.options.onLinkClick === other.options.onLinkClick
+      && this.options.onLinkHover === other.options.onLinkHover
+      && this.options.onLinkContext === other.options.onLinkContext;
   }
 
   toDOM(view: EditorView): HTMLElement {
@@ -489,9 +604,93 @@ class LinkWidget extends WidgetType {
     link.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this.onClick?.({ target: this.target, event });
+      this.options.onLinkClick?.({ target: this.target, event, targetEl: link });
+    });
+    link.addEventListener("mouseover", (event) => {
+      this.options.onLinkHover?.({ target: this.target, event, targetEl: link });
+    });
+    link.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.options.onLinkContext?.({ target: this.target, event, targetEl: link });
     });
     return link;
+  }
+}
+
+class TagWidget extends WidgetType {
+  constructor(
+    private readonly tag: string,
+    private readonly onClick: TimelineLivePreviewOptions["onTagClick"],
+  ) {
+    super();
+  }
+
+  eq(other: TagWidget): boolean {
+    return this.tag === other.tag && this.onClick === other.onClick;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const tag = view.dom.ownerDocument.createElement("a");
+    tag.className = "dossier-timeline-lp-tag tag";
+    tag.href = "#";
+    tag.textContent = `#${this.tag}`;
+    tag.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.onClick?.(this.tag, event);
+    });
+    return tag;
+  }
+}
+
+class EmbedWidget extends WidgetType {
+  constructor(
+    private readonly embed: TimelineEmbed,
+    private readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: EmbedWidget): boolean {
+    return this.embed.src === other.embed.src
+      && this.embed.kind === other.embed.kind
+      && this.label === other.label;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const doc = view.dom.ownerDocument;
+    if (this.embed.kind === "image") {
+      const image = doc.createElement("img");
+      image.className = "dossier-timeline-lp-embed is-image";
+      image.src = this.embed.src;
+      image.alt = this.label;
+      image.loading = "lazy";
+      return image;
+    }
+    if (this.embed.kind === "audio") {
+      const audio = doc.createElement("audio");
+      audio.className = "dossier-timeline-lp-embed is-audio";
+      audio.src = this.embed.src;
+      audio.controls = true;
+      return audio;
+    }
+    if (this.embed.kind === "video") {
+      const video = doc.createElement("video");
+      video.className = "dossier-timeline-lp-embed is-video";
+      video.src = this.embed.src;
+      video.controls = true;
+      return video;
+    }
+    const frame = doc.createElement("iframe");
+    frame.className = "dossier-timeline-lp-embed is-pdf";
+    frame.src = this.embed.src;
+    frame.title = this.label;
+    return frame;
+  }
+
+  ignoreEvent(): boolean {
+    return false;
   }
 }
 

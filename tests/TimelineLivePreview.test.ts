@@ -95,4 +95,32 @@ describe("timeline Live Preview list editing", () => {
     view.destroy();
     host.remove();
   });
+
+  it("renders tags, highlights, comments, and media in read-only mode", () => {
+    const onTagClick = vi.fn();
+    const host = document.body.appendChild(document.createElement("div"));
+    const view = new EditorView({
+      parent: host,
+      state: EditorState.create({
+        doc: "==important== %%private%% #launch\n![[pitch.png]]",
+        extensions: [
+          EditorState.readOnly.of(true),
+          ...timelineLivePreviewExtensions({
+            onTagClick,
+            resolveEmbed: () => ({ src: "app://pitch.png", kind: "image" }),
+          }),
+        ],
+      }),
+    });
+
+    expect(host.querySelector(".dossier-timeline-lp-highlight")?.textContent).toBe("important");
+    expect(host.querySelector(".cm-content")?.textContent).not.toContain("private");
+    const tag = host.querySelector<HTMLAnchorElement>("a.dossier-timeline-lp-tag");
+    expect(tag?.textContent).toBe("#launch");
+    tag?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(onTagClick).toHaveBeenCalledWith("launch", expect.any(MouseEvent));
+    expect(host.querySelector<HTMLImageElement>("img.dossier-timeline-lp-embed")?.src).toContain("pitch.png");
+    view.destroy();
+    host.remove();
+  });
 });

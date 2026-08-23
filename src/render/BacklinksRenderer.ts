@@ -33,14 +33,17 @@ export class BacklinksRenderer extends Component implements HoverParent {
 
   constructor(
     readonly rootEl: HTMLElement,
-    readonly targetFile: TFile,
+    targetFile: TFile,
     private readonly host: RendererHost,
     private readonly onLayoutChange?: () => void,
   ) {
     super();
+    this.targetFile = targetFile;
     rootEl.classList.add("dossier-backlinks", "is-empty");
     rootEl.dataset.dossierTarget = targetFile.path;
   }
+
+  targetFile: TFile;
 
   onload(): void {
     this.host.registerRenderer(this);
@@ -77,6 +80,27 @@ export class BacklinksRenderer extends Component implements HoverParent {
         console.error(`[Dossier] Failed to render references for ${this.targetFile.path}`, error);
       }
     }
+  }
+
+  retarget(targetFile: TFile): void {
+    if (targetFile.path === this.targetFile.path) return;
+    this.generation += 1;
+    this.unsubscribe?.();
+    this.unsubscribe = undefined;
+    this.subscribedPath = undefined;
+    if (this.renderCycle) {
+      this.removeChild(this.renderCycle);
+      this.renderCycle = undefined;
+    }
+    this.showAll = false;
+    this.forceExpanded = false;
+    this.expandedPassages.clear();
+    this.targetFile = targetFile;
+    this.rootEl.dataset.dossierTarget = targetFile.path;
+    this.rootEl.replaceChildren();
+    this.rootEl.classList.add("is-empty");
+    this.onLayoutChange?.();
+    void this.refresh();
   }
 
   private ensureSubscription(): void {
@@ -177,28 +201,29 @@ export class BacklinksRenderer extends Component implements HoverParent {
   ): Promise<HTMLElement> {
     const groupEl = document.createElement("section");
     groupEl.className = "dossier-backlink-group";
-    const sourceButton = document.createElement("button");
-    sourceButton.type = "button";
-    sourceButton.className = "dossier-backlink-source";
-    sourceButton.dataset.href = group.sourceFile.path;
-    sourceButton.append(document.createTextNode(group.sourceLabel));
+    const sourceLink = document.createElement("a");
+    sourceLink.className = "dossier-backlink-source internal-link";
+    sourceLink.href = group.sourceFile.path;
+    sourceLink.dataset.href = group.sourceFile.path;
+    sourceLink.append(document.createTextNode(group.sourceLabel));
     const firstOccurrence = group.occurrences[0];
     if (firstOccurrence) {
-      sourceButton.addEventListener("click", (event) => {
+      sourceLink.addEventListener("click", (event) => {
+        event.preventDefault();
         void this.host.navigator.open(group.sourceFile, firstOccurrence, event);
       });
-      sourceButton.addEventListener("mouseover", (event) => {
+      sourceLink.addEventListener("mouseover", (event) => {
         this.host.app.workspace.trigger("hover-link", {
           event,
           source: "dossier",
           hoverParent: this,
-          targetEl: sourceButton,
+          targetEl: sourceLink,
           linktext: group.sourceFile.path,
           sourcePath: this.targetFile.path,
         });
       });
     }
-    groupEl.append(sourceButton);
+    groupEl.append(sourceLink);
 
     for (const passage of group.passages) {
       if (this.host.getSettings().showSourceHeading && passage.heading) {

@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-dossier",
-  "version": "0.2.4",
-  "description": "Contextual backlinks rendered inline beneath Obsidian notes.",
+  "name": "obsidian-tradecraft",
+  "version": "0.3.0",
+  "description": "Contextual backlinks and focused Daily Note workflows for Obsidian.",
   "main": "main.js",
   "type": "module",
   "scripts": {
@@ -16,12 +16,18 @@
   "keywords": [
     "obsidian",
     "backlinks",
-    "contextual-backlinks"
+    "contextual-backlinks",
+    "daily-notes",
+    "timeline"
   ],
   "author": "Michael Boyle",
   "license": "MIT",
   "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
     "@codemirror/commands": "^6.11.0",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/search": "^6.7.1",
     "@codemirror/state": "6.5.0",
     "@codemirror/view": "6.38.6",
     "@eslint/js": "^9.39.4",

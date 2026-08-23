@@ -4,6 +4,12 @@ import { describe, expect, it } from "vitest";
 const styles = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 
 describe("mobile navigator styles", () => {
+  it("shows the week strip only on mobile or narrow layouts", () => {
+    expect(styles).toMatch(
+      /@media \(min-width: 701px\)\s*\{[\s\S]*?body:not\(\.is-mobile\)[^{]*\.dossier-week-nav\s*\{\s*display:\s*none !important;/,
+    );
+  });
+
   it("outranks Obsidian's Markdown padding reset and clears the native header", () => {
     expect(styles).toContain(
       'body.is-mobile .workspace-leaf-content[data-type="markdown"] .view-content.dossier-week-nav-host',

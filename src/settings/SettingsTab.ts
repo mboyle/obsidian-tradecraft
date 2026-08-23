@@ -128,7 +128,7 @@ export class DossierSettingTab extends PluginSettingTab {
     );
     new Setting(containerEl)
       .setName("When a date has no note")
-      .setDesc("Daily Notes templates are used when its folder and filename format match Dossier.")
+      .setDesc("Daily Notes templates are used when its folder and filename format match Tradecraft.")
       .addDropdown((dropdown) => dropdown
         .addOption("daily-notes", "Create/open using Daily Notes")
         .addOption("blank", "Create a blank note")

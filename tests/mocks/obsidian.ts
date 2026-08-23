@@ -90,6 +90,10 @@ export class Notice {
   }
 }
 
+export class Menu {
+  showAtMouseEvent(): void {}
+}
+
 export class TFile {
   path: string;
   basename: string;
@@ -118,4 +122,28 @@ export class MarkdownView {
 
 export function getLinkpath(link: string): string {
   return link.split("#", 1)[0] ?? link;
+}
+
+export function parseFrontMatterAliases(frontmatter: unknown): string[] | null {
+  if (!frontmatter || typeof frontmatter !== "object") return null;
+  const aliases = (frontmatter as { aliases?: unknown }).aliases;
+  if (typeof aliases === "string") return [aliases];
+  return Array.isArray(aliases) ? aliases.filter((alias): alias is string => typeof alias === "string") : null;
+}
+
+export function getAllTags(cache: { tags?: Array<{ tag: string }> }): string[] | null {
+  return cache.tags?.map(({ tag }) => tag) ?? null;
+}
+
+export function htmlToMarkdown(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "- ")
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gis, "**$1**")
+    .replace(/<em[^>]*>(.*?)<\/em>/gis, "*$1*")
+    .replace(/<a[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gis, "[$2]($1)")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }

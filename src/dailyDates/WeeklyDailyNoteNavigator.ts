@@ -403,12 +403,12 @@ export class WeeklyDailyNoteNavigator extends Component {
       await binding.leaf.openFile(file, { active: true });
     } catch (error) {
       state.pendingInternalKey = undefined;
-      console.error("Dossier: failed to open Daily Note", error);
+      console.error("Tradecraft: failed to open Daily Note", error);
     }
   }
 
   /**
-   * Obsidian's Daily Notes core plugin may create today's file before Dossier loads.
+   * Obsidian's Daily Notes core plugin may create today's file before Tradecraft loads.
    * Present that semantically empty file through the same deferred surface as a
    * missing note, so the starter remains virtual until meaningful input exists.
    */
@@ -428,7 +428,7 @@ export class WeeklyDailyNoteNavigator extends Component {
       ) return;
       this.showDeferred(binding, date, true);
     }).catch((error) => {
-      console.debug("Dossier: could not inspect an empty Daily Note", error);
+      console.debug("Tradecraft: could not inspect an empty Daily Note", error);
     });
   }
 
@@ -550,7 +550,7 @@ export class WeeklyDailyNoteNavigator extends Component {
         deferred.creating = false;
         deferred.root.removeClass("is-creating");
       }
-      console.error("Dossier: failed to create deferred Daily Note", error);
+      console.error("Tradecraft: failed to create deferred Daily Note", error);
       new Notice(`Could not create Daily Note: ${this.service.dateToDailyFilePath(deferred.date)}`);
     }
   }

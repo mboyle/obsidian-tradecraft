@@ -1,8 +1,11 @@
 import { EditorState } from "@codemirror/state";
+import { completionStatus } from "@codemirror/autocomplete";
+import { searchPanelOpen } from "@codemirror/search";
 import { EditorView } from "@codemirror/view";
 import {
   ItemView,
   Keymap,
+  Menu,
   Notice,
   Platform,
   TFile,
@@ -23,6 +26,9 @@ import {
 import { dailyDateFromKey, dailyDateKey } from "./DailyWeek";
 import { DailyTimelineWindow, timelineScrollDirection } from "./DailyTimelineWindow";
 import { timelineLivePreviewExtensions } from "./TimelineLivePreview";
+import { timelineWikiLinkExtensions } from "./TimelineLinkSuggest";
+import { timelineEditingExtensions } from "./TimelineEditing";
+import { timelinePasteDropExtensions } from "./TimelinePasteDrop";
 import {
   findTimelineEditOffset,
   type TimelineEditIntent,
@@ -254,7 +260,7 @@ export class DailyTimelineView extends ItemView {
       if (generation !== day.renderGeneration) return;
       day.el.addClass("has-error");
       day.body.createDiv({ cls: "dossier-timeline-error", text: "Could not load this Daily Note." });
-      console.error("Dossier: failed to render a Daily Note in the timeline", error);
+      console.error("Tradecraft: failed to render a Daily Note in the timeline", error);
     }
   }
 
@@ -272,6 +278,10 @@ export class DailyTimelineView extends ItemView {
           EditorView.lineWrapping,
           ...timelineLivePreviewExtensions({
             onLinkClick: ({ target, event }) => this.openTimelineLink(target, day.file?.path, event),
+            onLinkHover: ({ target, event, targetEl }) => this.hoverTimelineLink(target, day.file?.path, event, targetEl),
+            onLinkContext: ({ target, event }) => this.contextTimelineLink(target, day.file?.path, event),
+            onTagClick: (tag) => void this.openTagSearch(tag),
+            resolveEmbed: (target) => this.resolveTimelineEmbed(target, day.file?.path),
           }),
           EditorView.domEventHandlers({
             mousedown: (event, preview) => {
@@ -312,7 +322,7 @@ export class DailyTimelineView extends ItemView {
         baseContent = await this.app.vault.cachedRead(file);
         content = dailyContentForEditing(baseContent);
       } catch (error) {
-        console.error("Dossier: failed to read a Daily Note for editing", error);
+        console.error("Tradecraft: failed to read a Daily Note for editing", error);
         new Notice(`Could not edit Daily Note: ${file.path}`);
         return;
       }
@@ -338,9 +348,22 @@ export class DailyTimelineView extends ItemView {
         selection: { anchor },
         extensions: [
           EditorView.lineWrapping,
+          ...timelineEditingExtensions(),
           ...timelineLivePreviewExtensions({
             onLinkClick: ({ target, event }) => this.openTimelineLink(target, file?.path, event),
+            onLinkHover: ({ target, event, targetEl }) => this.hoverTimelineLink(target, file?.path, event, targetEl),
+            onLinkContext: ({ target, event }) => this.contextTimelineLink(target, file?.path, event),
+            onTagClick: (tag) => void this.openTagSearch(tag),
+            resolveEmbed: (target) => this.resolveTimelineEmbed(target, file?.path),
           }),
+          ...timelineWikiLinkExtensions(
+            this.app,
+            file?.path ?? this.service.dateToDailyFilePath(day.date),
+          ),
+          ...timelinePasteDropExtensions(
+            this.app,
+            file?.path ?? this.service.dateToDailyFilePath(day.date),
+          ),
           EditorView.updateListener.of((update) => {
             const active = this.activeEditor;
             if (update.docChanged && active?.day === day && !active.suppressUpdates) {
@@ -355,8 +378,9 @@ export class DailyTimelineView extends ItemView {
             }
           }),
           EditorView.domEventHandlers({
-            keydown: (event) => {
+            keydown: (event, editorView) => {
               if (event.key !== "Escape") return false;
+              if (completionStatus(editorView.state) !== null || searchPanelOpen(editorView.state)) return false;
               event.preventDefault();
               void this.finishEditing();
               return true;
@@ -364,7 +388,10 @@ export class DailyTimelineView extends ItemView {
             blur: () => {
               editorHost.win.setTimeout(() => {
                 const active = this.activeEditor;
-                if (active?.day === day && !active.view.hasFocus) void this.finishEditing();
+                const focused = editorHost.ownerDocument.activeElement;
+                if (active?.day === day && !active.view.hasFocus && !editorHost.contains(focused)) {
+                  void this.finishEditing();
+                }
               }, 0);
               return false;
             },
@@ -426,13 +453,13 @@ export class DailyTimelineView extends ItemView {
         });
         if (conflicted) {
           editor.dirty = true;
-          new Notice("Dossier: this Daily Note changed elsewhere. Your inline edits remain open and were not overwritten.");
+          new Notice("Tradecraft: this Daily Note changed elsewhere. Your inline edits remain open and were not overwritten.");
           return false;
         }
         editor.baseContent = written;
       } catch (error) {
         editor.dirty = true;
-        console.error("Dossier: failed to save an inline Daily Note", error);
+        console.error("Tradecraft: failed to save an inline Daily Note", error);
         new Notice(`Could not save Daily Note: ${file.path}`);
         return false;
       }
@@ -469,7 +496,7 @@ export class DailyTimelineView extends ItemView {
       }
       return true;
     } catch (error) {
-      console.error("Dossier: failed to create inline Daily Note", error);
+      console.error("Tradecraft: failed to create inline Daily Note", error);
       new Notice(`Could not create Daily Note: ${this.service.dateToDailyFilePath(editor.day.date)}`);
       return false;
     }
@@ -520,6 +547,65 @@ export class DailyTimelineView extends ItemView {
       sourcePath ?? "",
       Keymap.isModEvent(event),
     );
+  }
+
+  private hoverTimelineLink(
+    target: string,
+    sourcePath: string | undefined,
+    event: MouseEvent,
+    targetEl: HTMLElement,
+  ): void {
+    if (/^[a-z][a-z\d+.-]*:/i.test(target)) return;
+    this.app.workspace.trigger("hover-link", {
+      event,
+      source: "dossier",
+      hoverParent: this,
+      targetEl,
+      linktext: target,
+      sourcePath: sourcePath ?? "",
+    });
+  }
+
+  private contextTimelineLink(
+    target: string,
+    sourcePath: string | undefined,
+    event: MouseEvent,
+  ): void {
+    if (/^[a-z][a-z\d+.-]*:/i.test(target)) return;
+    const menu = new Menu();
+    if (this.app.workspace.handleLinkContextMenu(menu, target, sourcePath ?? "", this.leaf)) {
+      menu.showAtMouseEvent(event);
+    }
+  }
+
+  private async openTagSearch(tag: string): Promise<void> {
+    const leaf = this.app.workspace.getLeaf("tab");
+    await leaf.setViewState({
+      type: "search",
+      active: true,
+      state: { query: `tag:#${tag}` },
+    });
+  }
+
+  private resolveTimelineEmbed(
+    target: string,
+    sourcePath: string | undefined,
+  ): { src: string; kind: "image" | "audio" | "video" | "pdf" } | null {
+    let decoded = target;
+    try {
+      decoded = decodeURIComponent(target);
+    } catch {
+      // Link resolution below can still handle the original text.
+    }
+    const linkpath = decoded.split("#", 1)[0] ?? decoded;
+    if (/^[a-z][a-z\d+.-]*:/i.test(linkpath)) {
+      const kind = timelineMediaKind(linkpath);
+      return kind ? { src: linkpath, kind } : null;
+    }
+    const file = this.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath ?? "");
+    if (!file) return null;
+    const kind = timelineMediaKind(file.path);
+    return kind ? { src: this.app.vault.getResourcePath(file), kind } : null;
   }
 
   private scheduleScrollWork(): void {
@@ -635,7 +721,7 @@ export class DailyTimelineView extends ItemView {
     if (editor?.file?.path === file.path) {
       if (editor.saving) return;
       if (editor.dirty) {
-        new Notice("Dossier: this Daily Note changed elsewhere. Saving will pause until you resolve the inline edit.");
+        new Notice("Tradecraft: this Daily Note changed elsewhere. Saving will pause until you resolve the inline edit.");
         return;
       }
       void this.reloadEditor(editor);
@@ -661,7 +747,7 @@ export class DailyTimelineView extends ItemView {
       editor.baseContent = content;
     } catch (error) {
       editor.suppressUpdates = false;
-      console.debug("Dossier: could not refresh an externally modified inline note", error);
+      console.debug("Tradecraft: could not refresh an externally modified inline note", error);
     }
   }
 
@@ -671,7 +757,7 @@ export class DailyTimelineView extends ItemView {
       if (editor.saveTimer !== undefined) editor.day.el.win.clearTimeout(editor.saveTimer);
       editor.view.destroy();
       this.activeEditor = undefined;
-      if (editor.dirty) new Notice("Dossier: the Daily Note being edited was deleted; its unsaved inline changes could not be saved.");
+      if (editor.dirty) new Notice("Tradecraft: the Daily Note being edited was deleted; its unsaved inline changes could not be saved.");
     }
     this.refreshPath(path);
   }
@@ -788,4 +874,13 @@ function removeTooltipAttributes(element: HTMLElement): void {
   element.removeAttribute("aria-label");
   element.removeAttribute("data-tooltip-position");
   element.removeAttribute("title");
+}
+
+function timelineMediaKind(path: string): "image" | "audio" | "video" | "pdf" | null {
+  const clean = path.split(/[?#]/, 1)[0]?.toLowerCase() ?? path.toLowerCase();
+  if (/\.(?:avif|bmp|gif|jpe?g|png|svg|webp)$/.test(clean)) return "image";
+  if (/\.(?:flac|m4a|mp3|oga|ogg|wav|webm)$/.test(clean)) return "audio";
+  if (/\.(?:mkv|mov|mp4|ogv|webm)$/.test(clean)) return "video";
+  if (/\.pdf$/.test(clean)) return "pdf";
+  return null;
 }

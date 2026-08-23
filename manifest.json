@@ -1,9 +1,9 @@
 {
   "id": "dossier",
-  "name": "Dossier",
-  "version": "0.2.4",
+  "name": "Tradecraft",
+  "version": "0.3.0",
   "minAppVersion": "1.7.2",
-  "description": "Read every backlink in the context where it was written.",
+  "description": "Contextual backlinks, readable Daily Note dates, compact week navigation, and a continuous desktop timeline.",
   "author": "Michael Boyle",
   "isDesktopOnly": false
 }
