@@ -9,8 +9,11 @@ export interface SettingsHost {
 }
 
 export class DossierSettingTab extends PluginSettingTab {
-  constructor(app: App, private readonly host: Plugin & SettingsHost) {
+  private readonly host: SettingsHost;
+
+  constructor(app: App, host: Plugin & SettingsHost) {
     super(app, host);
+    this.host = host;
   }
 
   display(): void {

@@ -33,9 +33,6 @@ export default tseslint.config(
       "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/require-await": "off",
       "depend/ban-dependencies": "off",
-      // The rule mistakes this plugin's own `settings` field for a newer
-      // member on Obsidian's base Plugin class.
-      "obsidianmd/no-unsupported-api": "off",
     },
   },
 );
