@@ -54,9 +54,8 @@ export function timelineWikiLinkCompletions(
   linkStart = 0,
 ): Completion[] {
   const options: Completion[] = [];
-  for (const file of app.vault.getFiles()) {
+  for (const file of app.vault.getMarkdownFiles()) {
     options.push(fileCompletion(app, file, sourcePath, linkStart));
-    if (file.extension !== "md") continue;
     const aliases = parseFrontMatterAliases(app.metadataCache.getFileCache(file)?.frontmatter ?? null) ?? [];
     for (const alias of aliases) {
       options.push(fileCompletion(app, file, sourcePath, linkStart, alias));

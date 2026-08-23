@@ -449,6 +449,9 @@ function installObsidianDomHelpers(): void {
     };
     prototype.hasClass = function (this: HTMLElement, name: string) { return this.classList.contains(name); };
     prototype.detach = function (this: HTMLElement) { this.remove(); };
+    prototype.setCssStyles = function (this: HTMLElement, styles: Record<string, string>) {
+      for (const [property, value] of Object.entries(styles)) this.style.setProperty(property, value);
+    };
     Object.defineProperty(HTMLElement.prototype, "win", { configurable: true, get: () => window });
     Object.defineProperty(HTMLElement.prototype, "doc", {
       configurable: true,

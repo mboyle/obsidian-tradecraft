@@ -7,6 +7,12 @@ export default tseslint.config(
   { ignores: ["main.js", "node_modules", "coverage"] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  ...obsidianmd.configs.recommended,
+  {
+    // Moment is supplied by Obsidian at runtime; this development dependency
+    // provides its types and the test implementation.
+    rules: { "depend/ban-dependencies": "off" },
+  },
   {
     files: ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"],
     languageOptions: {
@@ -15,10 +21,21 @@ export default tseslint.config(
     },
     plugins: { obsidianmd },
     rules: {
+      // Keep the Obsidian community-plugin rules enabled while preserving the
+      // project's existing type-safety baseline. These type-aware rules are
+      // tracked separately from the community-review compatibility checks.
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/unbound-method": "off",
       "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/require-await": "off",
+      "depend/ban-dependencies": "off",
+      // The rule mistakes this plugin's own `settings` field for a newer
+      // member on Obsidian's base Plugin class.
+      "obsidianmd/no-unsupported-api": "off",
     },
   },
 );

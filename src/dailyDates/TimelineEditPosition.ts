@@ -94,7 +94,8 @@ function markdownInlineText(value: string): string {
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
     .replace(/\[\[([^\]]+)\]\]/g, "$1")
     .replace(/(?:\*\*|__|~~|`)/g, "")
-    .replace(/(^|\s)[*_](?=\S)|(?<=\S)[*_](?=\s|$)/g, "$1");
+    .replace(/(^|\s)[*_](?=\S)/g, "$1")
+    .replace(/(\S)[*_](?=\s|$)/g, "$1");
 }
 
 function normalizeRenderedText(value: string): string {

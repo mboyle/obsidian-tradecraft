@@ -296,8 +296,10 @@ export class WeeklyDailyNoteNavigator extends Component {
     const handler = () => {
       const height = binding.root.getBoundingClientRect().height;
       const offset = Math.min(scrollEl.scrollTop, height);
-      binding.root.style.transform = `translate3d(0, ${-offset}px, 0)`;
-      binding.root.style.visibility = offset >= height && height > 0 ? "hidden" : "visible";
+      binding.root.setCssStyles({
+        transform: `translate3d(0, ${-offset}px, 0)`,
+        visibility: offset >= height && height > 0 ? "hidden" : "visible",
+      });
     };
     binding.scrollEl = scrollEl;
     binding.scrollHandler = handler;
@@ -337,8 +339,10 @@ export class WeeklyDailyNoteNavigator extends Component {
         page.appendChild(this.createDateButton(binding, date, selected, offset === 0));
       }
     }
-    binding.track.style.transition = "none";
-    binding.track.style.transform = "translate3d(-33.333333%, 0, 0)";
+    binding.track.setCssStyles({
+      transition: "none",
+      transform: "translate3d(-33.333333%, 0, 0)",
+    });
     binding.root.removeClass("is-dragging", "is-settling");
   }
 
@@ -607,10 +611,12 @@ export class WeeklyDailyNoteNavigator extends Component {
       return;
     }
     binding.root.addClass("is-settling");
-    binding.track.style.transition = `transform ${ANIMATION_MS}ms ease-out`;
-    binding.track.style.transform = direction > 0
-      ? "translate3d(-66.666667%, 0, 0)"
-      : "translate3d(0, 0, 0)";
+    binding.track.setCssStyles({
+      transition: `transform ${ANIMATION_MS}ms ease-out`,
+      transform: direction > 0
+        ? "translate3d(-66.666667%, 0, 0)"
+        : "translate3d(0, 0, 0)",
+    });
     if (binding.settleTimer !== undefined) binding.root.win.clearTimeout(binding.settleTimer);
     binding.settleTimer = binding.root.win.setTimeout(commit, ANIMATION_MS);
   }
@@ -663,12 +669,14 @@ export class WeeklyDailyNoteNavigator extends Component {
         // Some WKWebView versions reject capture on an ancestor of the pointer target.
       }
       binding.root.addClass("is-dragging");
-      binding.track.style.transition = "none";
+      binding.track.setCssStyles({ transition: "none" });
     }
     event.preventDefault();
     const width = binding.viewport.getBoundingClientRect().width;
     const delta = Math.max(-width, Math.min(width, drag.deltaX));
-    binding.track.style.transform = `translate3d(calc(-33.333333% + ${delta}px), 0, 0)`;
+    binding.track.setCssStyles({
+      transform: `translate3d(calc(-33.333333% + ${delta}px), 0, 0)`,
+    });
   }
 
   private onPointerUp(binding: NavigatorBinding, event: PointerEvent): void {
@@ -753,12 +761,16 @@ export class WeeklyDailyNoteNavigator extends Component {
 
   private snapToCurrent(binding: NavigatorBinding): void {
     if (!this.shouldAnimate(binding)) {
-      binding.track.style.transition = "none";
-      binding.track.style.transform = "translate3d(-33.333333%, 0, 0)";
+      binding.track.setCssStyles({
+        transition: "none",
+        transform: "translate3d(-33.333333%, 0, 0)",
+      });
       return;
     }
-    binding.track.style.transition = `transform ${ANIMATION_MS}ms ease-out`;
-    binding.track.style.transform = "translate3d(-33.333333%, 0, 0)";
+    binding.track.setCssStyles({
+      transition: `transform ${ANIMATION_MS}ms ease-out`,
+      transform: "translate3d(-33.333333%, 0, 0)",
+    });
   }
 }
 

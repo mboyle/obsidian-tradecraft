@@ -112,6 +112,8 @@ Until Tradecraft is available in Obsidian's Community Plugins directory, install
 
 Tradecraft is deterministic and local. It makes no network requests, collects no telemetry, and sends no vault content anywhere.
 
+To provide contextual backlinks and native-feeling link, tag, heading, and block suggestions, Tradecraft enumerates Markdown file paths and Obsidian's cached metadata across the vault. It reads note contents only when needed to render or edit the notes and references currently in use.
+
 ## Development
 
 Node.js 20 or newer and npm are required.

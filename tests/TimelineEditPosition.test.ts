@@ -39,4 +39,13 @@ describe("timeline rendered-click position mapping", () => {
     });
     expect(offset).toBe(markdown.indexOf("**Bold words") + 4);
   });
+
+  it("matches single-marker emphasis without regex lookbehind", () => {
+    const markdown = "- *Italic words*\n- Another line";
+    expect(findTimelineEditOffset(markdown, {
+      renderedText: "Italic words",
+      characterOffset: 0,
+      blockOrdinal: 0,
+    })).toBe(markdown.indexOf("*Italic words"));
+  });
 });

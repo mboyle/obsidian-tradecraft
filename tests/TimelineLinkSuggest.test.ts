@@ -27,7 +27,7 @@ describe("timeline wiki-link suggestions", () => {
       parent: { path: "Leisure" },
     } as TFile;
     const app = {
-      vault: { getFiles: vi.fn(() => [file]) },
+      vault: { getMarkdownFiles: vi.fn(() => [file]) },
       metadataCache: { getFileCache: vi.fn(() => null) },
       fileManager: { generateMarkdownLink: vi.fn(() => "[[Leisure/Books to read]]") },
     } as unknown as App;
