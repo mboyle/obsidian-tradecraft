@@ -46,8 +46,8 @@ export class BacklinkService {
   shouldRender(targetFile: TFile): boolean {
     const settings = this.getSettings();
     if (matchesFolderPrefix(targetFile.path, settings.targetFolderExclusions)) return false;
-    const frontmatter = this.app.metadataCache.getFileCache(targetFile)?.frontmatter;
-    const frontmatterOverride = frontmatter?.["contextual-backlinks"];
+    const frontmatter: unknown = this.app.metadataCache.getFileCache(targetFile)?.frontmatter;
+    const frontmatterOverride = recordValue(frontmatter, "contextual-backlinks");
     if (typeof frontmatterOverride === "boolean") return frontmatterOverride;
     const noteOverride = settings.noteOverrides[targetFile.path];
     if (typeof noteOverride === "boolean") return noteOverride;
@@ -127,7 +127,8 @@ export class BacklinkService {
 
   private makeShell(sourceFile: TFile, cache: CachedMetadata | null, occurrences: ResolvedReference[]): GroupShell {
     const settings = this.getSettings();
-    const frontmatterTitle = cache?.frontmatter?.title;
+    const frontmatter: unknown = cache?.frontmatter;
+    const frontmatterTitle = recordValue(frontmatter, "title");
     const sourceTitle = typeof frontmatterTitle === "string" && frontmatterTitle.trim()
       ? frontmatterTitle.trim()
       : sourceFile.basename;
@@ -204,6 +205,11 @@ export class BacklinkService {
   private debug(message: string): void {
     if (this.getSettings().debug) console.debug(`[Dossier] ${message}`);
   }
+}
+
+function recordValue(value: unknown, key: string): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
+  return (value as Record<string, unknown>)[key];
 }
 
 export function chooseSourceLabel(

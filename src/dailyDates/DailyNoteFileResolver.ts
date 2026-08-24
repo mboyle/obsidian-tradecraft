@@ -1,8 +1,9 @@
 import { Notice, TFile, moment, type App } from "obsidian";
-import type { Moment } from "moment";
 import type { DailyNoteDateSettings, DailyNoteMissingBehavior } from "../types";
 import { normalizeDailyNoteFolder } from "../settings/Settings";
 import type { DailyNoteDisplayService } from "./DailyNoteDisplayService";
+
+type Moment = moment.Moment;
 
 interface CoreDailyNotesPlugin {
   options?: { folder?: unknown };

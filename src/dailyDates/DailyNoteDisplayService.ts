@@ -1,7 +1,8 @@
 import { moment, type TFile } from "obsidian";
-import type { Moment } from "moment";
 import type { DailyNoteDateSettings } from "../types";
 import { normalizeDailyNoteFolder } from "../settings/Settings";
+
+type Moment = moment.Moment;
 
 export type DailyNoteDisplayFile = Pick<TFile, "path" | "basename" | "extension">;
 

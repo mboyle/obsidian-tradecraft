@@ -1,6 +1,7 @@
 import { moment } from "obsidian";
-import type { Moment } from "moment";
 import type { DailyNoteWeekStart } from "../types";
+
+type Moment = moment.Moment;
 
 export const DAILY_DATE_KEY_FORMAT = "YYYY-MM-DD";
 

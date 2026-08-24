@@ -300,7 +300,8 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
   }
 
   private async toggleCurrentNote(file: TFile): Promise<void> {
-    const frontmatterValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.["contextual-backlinks"];
+    const frontmatter: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const frontmatterValue = recordValue(frontmatter, "contextual-backlinks");
     if (typeof frontmatterValue === "boolean") {
       new Notice("Tradecraft: this note is controlled by its contextual-backlinks property.");
       return;
@@ -324,4 +325,9 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
     }
     return true;
   }
+}
+
+function recordValue(value: unknown, key: string): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
+  return (value as Record<string, unknown>)[key];
 }

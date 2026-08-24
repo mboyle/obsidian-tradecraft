@@ -23,7 +23,7 @@ class DossierWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    const root = document.createElement("div");
+    const root = view.dom.win.createDiv();
     this.renderer = new BacklinksRenderer(root, this.targetFile, this.host, () => view.requestMeasure());
     this.renderer.load();
     return root;

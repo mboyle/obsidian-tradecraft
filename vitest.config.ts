@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.ts"],
     coverage: {
       include: ["src/backlinks/**/*.ts", "src/utils/**/*.ts"],

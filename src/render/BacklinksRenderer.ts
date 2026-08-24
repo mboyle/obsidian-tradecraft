@@ -108,7 +108,9 @@ export class BacklinksRenderer extends Component implements HoverParent {
     this.unsubscribe?.();
     this.subscribedPath = this.targetFile.path;
     this.rootEl.dataset.dossierTarget = this.targetFile.path;
-    this.unsubscribe = this.host.service.subscribe(this.targetFile.path, () => this.refresh());
+    this.unsubscribe = this.host.service.subscribe(this.targetFile.path, () => {
+      void this.refresh();
+    });
   }
 
   expandAll(): void {
@@ -138,10 +140,10 @@ export class BacklinksRenderer extends Component implements HoverParent {
       return;
     }
 
-    const fragment = document.createDocumentFragment();
+    const fragment = this.rootEl.win.createFragment();
     if (settings.showHeading) fragment.append(this.createHeader(snapshot.totalOccurrences, collapsed));
     if (!collapsed) {
-      const body = document.createElement("div");
+      const body = this.rootEl.win.createDiv();
       body.className = "dossier-backlinks-body";
       if (settings.groupBySource) {
         for (const group of snapshot.groups) {
@@ -170,16 +172,16 @@ export class BacklinksRenderer extends Component implements HoverParent {
 
   private createHeader(count: number, collapsed: boolean): HTMLElement {
     const settings = this.host.getSettings();
-    const button = document.createElement("button");
+    const button = this.rootEl.win.createEl("button");
     button.type = "button";
     button.className = "dossier-backlinks-header";
     button.setAttribute("aria-expanded", String(!collapsed));
-    const heading = document.createElement("span");
+    const heading = this.rootEl.win.createSpan();
     heading.className = "dossier-backlinks-heading";
     heading.textContent = settings.heading;
     button.append(heading);
     if (settings.showCount) {
-      const countEl = document.createElement("span");
+      const countEl = this.rootEl.win.createSpan();
       countEl.className = "dossier-backlinks-count";
       countEl.textContent = `(${count})`;
       button.append(countEl);
@@ -199,13 +201,13 @@ export class BacklinksRenderer extends Component implements HoverParent {
     generation: number,
     renderCycle: Component,
   ): Promise<HTMLElement> {
-    const groupEl = document.createElement("section");
+    const groupEl = this.rootEl.win.createEl("section");
     groupEl.className = "dossier-backlink-group";
-    const sourceLink = document.createElement("a");
+    const sourceLink = this.rootEl.win.createEl("a");
     sourceLink.className = "dossier-backlink-source internal-link";
     sourceLink.href = group.sourceFile.path;
     sourceLink.dataset.href = group.sourceFile.path;
-    sourceLink.append(document.createTextNode(group.sourceLabel));
+    sourceLink.append(this.rootEl.doc.createTextNode(group.sourceLabel));
     const firstOccurrence = group.occurrences[0];
     if (firstOccurrence) {
       sourceLink.addEventListener("click", (event) => {
@@ -227,7 +229,7 @@ export class BacklinksRenderer extends Component implements HoverParent {
 
     for (const passage of group.passages) {
       if (this.host.getSettings().showSourceHeading && passage.heading) {
-        const heading = document.createElement("div");
+        const heading = this.rootEl.win.createDiv();
         heading.className = "dossier-backlink-context-heading";
         heading.textContent = passage.heading;
         groupEl.append(heading);
@@ -243,10 +245,10 @@ export class BacklinksRenderer extends Component implements HoverParent {
     generation: number,
     renderCycle: Component,
   ): Promise<HTMLElement> {
-    const wrapper = document.createElement("div");
+    const wrapper = this.rootEl.win.createDiv();
     wrapper.className = "dossier-backlink-passage";
     wrapper.tabIndex = this.host.getSettings().openSourceOnExcerptClick ? 0 : -1;
-    const markdownEl = document.createElement("div");
+    const markdownEl = this.rootEl.win.createDiv();
     markdownEl.className = "dossier-backlink-context markdown-rendered";
     wrapper.append(markdownEl);
     const expanded = this.forceExpanded || this.expandedPassages.has(passage.key);
@@ -267,7 +269,7 @@ export class BacklinksRenderer extends Component implements HoverParent {
       if (anchor && !anchor.classList.contains("dossier-backlink-current-link")) return;
       event.preventDefault();
       event.stopPropagation();
-      const anchorIndex = anchor ? targetAnchors.indexOf(anchor as HTMLAnchorElement) : -1;
+      const anchorIndex = anchor ? targetAnchors.indexOf(anchor) : -1;
       const occurrence = anchorIndex >= 0 ? passage.occurrences[anchorIndex] : passage.primaryOccurrence;
       void this.host.navigator.open(sourceFile, occurrence ?? passage.primaryOccurrence, event);
     });
@@ -279,7 +281,7 @@ export class BacklinksRenderer extends Component implements HoverParent {
     });
 
     if (passage.truncated && !expanded) {
-      const expand = document.createElement("button");
+      const expand = this.rootEl.win.createEl("button");
       expand.type = "button";
       expand.className = "dossier-backlink-expand";
       expand.textContent = "Show more";
@@ -307,7 +309,7 @@ export class BacklinksRenderer extends Component implements HoverParent {
   }
 
   private createShowMoreButton(remaining: number): HTMLElement {
-    const button = document.createElement("button");
+    const button = this.rootEl.win.createEl("button");
     button.type = "button";
     button.className = "dossier-backlinks-more";
     button.textContent = `Show ${remaining} more`;

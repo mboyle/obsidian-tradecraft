@@ -1,7 +1,7 @@
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import type moment from "moment";
 import { Component, MarkdownView, Notice, type App, type WorkspaceLeaf } from "obsidian";
-import type { Moment } from "moment";
 import type { DossierSettings } from "../types";
 import type { DailyNoteDisplayService } from "./DailyNoteDisplayService";
 import { DailyNoteFileResolver, todayAtStartOfDay } from "./DailyNoteFileResolver";
@@ -21,6 +21,8 @@ import {
   startOfDailyWeek,
   swipeIntent,
 } from "./DailyWeek";
+
+type Moment = moment.Moment;
 
 const DEAD_ZONE = 10;
 const EDGE_EXCLUSION = 20;
@@ -191,7 +193,7 @@ export class WeeklyDailyNoteNavigator extends Component {
 
   private createBinding(leaf: WorkspaceLeaf, view: MarkdownView): NavigatorBinding {
     const doc = view.contentEl.ownerDocument;
-    const root = doc.createElement("section");
+    const root = doc.win.createEl("section");
     root.className = "dossier-week-nav";
     root.setAttribute("aria-label", "Daily Note week navigator");
     root.dataset.ignoreSwipe = "true";
@@ -353,7 +355,7 @@ export class WeeklyDailyNoteNavigator extends Component {
     currentPage: boolean,
   ): HTMLButtonElement {
     const settings = this.getSettings().dailyNoteDates.navigator;
-    const button = binding.root.doc.createElement("button");
+    const button = binding.root.win.createEl("button");
     button.type = "button";
     button.className = "dossier-week-nav-date";
     button.dataset.date = dailyDateKey(date);
@@ -455,7 +457,7 @@ export class WeeklyDailyNoteNavigator extends Component {
       ));
     }
 
-    const root = binding.root.doc.createElement("section");
+    const root = binding.root.win.createEl("section");
     root.className = "dossier-deferred-daily";
     root.setAttribute("aria-label", `Unsaved Daily Note for ${date.format("MMMM D, YYYY")}`);
     const content = root.createDiv({ cls: "dossier-deferred-daily-content" });

@@ -2,6 +2,7 @@ import { EditorState } from "@codemirror/state";
 import { completionStatus } from "@codemirror/autocomplete";
 import { searchPanelOpen } from "@codemirror/search";
 import { EditorView } from "@codemirror/view";
+import type moment from "moment";
 import {
   ItemView,
   Keymap,
@@ -13,7 +14,6 @@ import {
   type WorkspaceLeaf,
   type ViewStateResult,
 } from "obsidian";
-import type { Moment } from "moment";
 import type { DossierSettings } from "../types";
 import type { DailyNoteDisplayService } from "./DailyNoteDisplayService";
 import { DailyNoteFileResolver, todayAtStartOfDay } from "./DailyNoteFileResolver";
@@ -29,6 +29,8 @@ import { timelineLivePreviewExtensions } from "./TimelineLivePreview";
 import { timelineWikiLinkExtensions } from "./TimelineLinkSuggest";
 import { timelineEditingExtensions } from "./TimelineEditing";
 import { timelinePasteDropExtensions } from "./TimelinePasteDrop";
+
+type Moment = moment.Moment;
 import {
   findTimelineEditOffset,
   type TimelineEditIntent,
@@ -174,7 +176,7 @@ export class DailyTimelineView extends ItemView {
     this.anchorKey = dailyDateKey(date);
     this.centerKey = this.anchorKey;
 
-    const fragment = this.feed.doc.createDocumentFragment();
+    const fragment = this.feed.win.createFragment();
     const renderTasks: Promise<void>[] = [];
     for (const key of this.dateWindow.keys) {
       const day = this.createDay(key);
@@ -191,7 +193,7 @@ export class DailyTimelineView extends ItemView {
 
   private createDay(key: string): TimelineDay {
     const date = dailyDateFromKey(key) ?? todayAtStartOfDay();
-    const el = this.feed!.doc.createElement("section");
+    const el = this.feed!.win.createEl("section");
     el.className = "dossier-timeline-day";
     el.dataset.date = key;
     const heading = el.createDiv({ cls: "dossier-timeline-heading" });
@@ -668,7 +670,7 @@ export class DailyTimelineView extends ItemView {
 
       const renderTasks: Promise<void>[] = [];
       if (direction < 0) {
-        const fragment = this.feed.doc.createDocumentFragment();
+        const fragment = this.feed.win.createFragment();
         for (const key of shift.addedKeys) {
           const day = this.createDay(key);
           fragment.append(day.el);
@@ -834,13 +836,18 @@ function placeCaretAtRenderedClick(
 function caretTextOffset(block: HTMLElement, x: number, y: number): number {
   const doc = block.ownerDocument as Document & {
     caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
-    caretRangeFromPoint?: (x: number, y: number) => Range | null;
   };
   const position = doc.caretPositionFromPoint?.(x, y);
   const positionOffset = textOffsetWithin(block, position?.offsetNode, position?.offset);
   if (positionOffset !== null) return positionOffset;
-  const rangeAtPoint = doc.caretRangeFromPoint?.(x, y);
+  const rangeAtPoint = legacyCaretRangeFromPoint(doc, x, y);
   return textOffsetWithin(block, rangeAtPoint?.startContainer, rangeAtPoint?.startOffset) ?? 0;
+}
+
+function legacyCaretRangeFromPoint(doc: Document, x: number, y: number): Range | null {
+  const candidate: unknown = (doc as unknown as Record<string, unknown>)["caretRangeFromPoint"];
+  if (typeof candidate !== "function") return null;
+  return (candidate as (x: number, y: number) => Range | null).call(doc, x, y);
 }
 
 function textOffsetWithin(

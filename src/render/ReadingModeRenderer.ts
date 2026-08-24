@@ -41,7 +41,7 @@ export class ReadingModeRenderer {
     if (!sectionInfo && terminalLine !== undefined) return;
     if (el.querySelector(`:scope > .dossier-backlinks[data-dossier-target="${cssEscape(target.path)}"]`)) return;
 
-    const root = document.createElement("div");
+    const root = el.win.createDiv();
     el.append(root);
     context.addChild(new DossierReadingChild(root, target, this.host));
   };
@@ -74,7 +74,7 @@ export class ReadingModeRenderer {
         ? view.previewMode.containerEl
         : view.previewMode.containerEl.querySelector<HTMLElement>(".markdown-preview-view");
       if (!previewEl) return;
-      const root = document.createElement("div");
+      const root = previewEl.win.createDiv();
       root.classList.add("dossier-reading-fallback");
       previewEl.classList.add("dossier-has-reading-fallback");
       previewEl.append(root);
@@ -103,5 +103,5 @@ export class ReadingModeRenderer {
 }
 
 function cssEscape(value: string): string {
-  return globalThis.CSS?.escape(value) ?? value.replace(/["\\]/g, "\\$&");
+  return value.replace(/["\\]/g, "\\$&");
 }

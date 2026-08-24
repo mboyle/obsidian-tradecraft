@@ -1,5 +1,7 @@
-import type { Moment } from "moment";
+import type moment from "moment";
 import { dailyDateKey } from "./DailyWeek";
+
+type Moment = moment.Moment;
 
 export type TimelineShiftDirection = -1 | 1;
 

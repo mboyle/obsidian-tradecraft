@@ -516,7 +516,7 @@ function forEachMatch(regex: RegExp, text: string, callback: (match: RegExpExecA
 
 class BulletWidget extends WidgetType {
   toDOM(view: EditorView): HTMLElement {
-    const bullet = view.dom.ownerDocument.createElement("span");
+    const bullet = view.dom.win.createSpan();
     bullet.className = "dossier-timeline-lp-bullet list-bullet";
     bullet.setAttribute("aria-hidden", "true");
     return bullet;
@@ -533,7 +533,7 @@ class OrderedWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    const marker = view.dom.ownerDocument.createElement("span");
+    const marker = view.dom.win.createSpan();
     marker.className = "dossier-timeline-lp-ordered";
     marker.setAttribute("aria-hidden", "true");
     marker.textContent = this.label;
@@ -555,7 +555,7 @@ class TaskWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    const input = view.dom.ownerDocument.createElement("input");
+    const input = view.dom.win.createEl("input");
     input.className = "dossier-timeline-lp-task";
     input.type = "checkbox";
     input.checked = this.checked;
@@ -594,7 +594,7 @@ class LinkWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    const link = view.dom.ownerDocument.createElement("a");
+    const link = view.dom.win.createEl("a");
     link.className = this.external
       ? "dossier-timeline-lp-link-widget external-link"
       : "dossier-timeline-lp-link-widget internal-link";
@@ -631,7 +631,7 @@ class TagWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    const tag = view.dom.ownerDocument.createElement("a");
+    const tag = view.dom.win.createEl("a");
     tag.className = "dossier-timeline-lp-tag tag";
     tag.href = "#";
     tag.textContent = `#${this.tag}`;
@@ -661,7 +661,7 @@ class EmbedWidget extends WidgetType {
   toDOM(view: EditorView): HTMLElement {
     const doc = view.dom.ownerDocument;
     if (this.embed.kind === "image") {
-      const image = doc.createElement("img");
+      const image = doc.win.createEl("img");
       image.className = "dossier-timeline-lp-embed is-image";
       image.src = this.embed.src;
       image.alt = this.label;
@@ -669,20 +669,20 @@ class EmbedWidget extends WidgetType {
       return image;
     }
     if (this.embed.kind === "audio") {
-      const audio = doc.createElement("audio");
+      const audio = doc.win.createEl("audio");
       audio.className = "dossier-timeline-lp-embed is-audio";
       audio.src = this.embed.src;
       audio.controls = true;
       return audio;
     }
     if (this.embed.kind === "video") {
-      const video = doc.createElement("video");
+      const video = doc.win.createEl("video");
       video.className = "dossier-timeline-lp-embed is-video";
       video.src = this.embed.src;
       video.controls = true;
       return video;
     }
-    const frame = doc.createElement("iframe");
+    const frame = doc.win.createEl("iframe");
     frame.className = "dossier-timeline-lp-embed is-pdf";
     frame.src = this.embed.src;
     frame.title = this.label;
@@ -696,7 +696,7 @@ class EmbedWidget extends WidgetType {
 
 class RuleWidget extends WidgetType {
   toDOM(view: EditorView): HTMLElement {
-    const rule = view.dom.ownerDocument.createElement("span");
+    const rule = view.dom.win.createSpan();
     rule.className = "dossier-timeline-lp-rule-widget";
     rule.setAttribute("aria-hidden", "true");
     return rule;
