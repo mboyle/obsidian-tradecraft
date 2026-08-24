@@ -1,6 +1,6 @@
 {
   "name": "obsidian-tradecraft",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Contextual backlinks and focused Daily Note workflows for Obsidian.",
   "main": "main.js",
   "type": "module",

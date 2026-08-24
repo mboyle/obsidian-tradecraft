@@ -54,7 +54,7 @@ export function timelineWikiLinkCompletions(
   linkStart = 0,
 ): Completion[] {
   const options: Completion[] = [];
-  for (const file of app.vault.getMarkdownFiles()) {
+  for (const file of timelineMetadataFiles(app, sourcePath)) {
     options.push(fileCompletion(app, file, sourcePath, linkStart));
     const aliases = parseFrontMatterAliases(app.metadataCache.getFileCache(file)?.frontmatter ?? null) ?? [];
     for (const alias of aliases) {
@@ -66,7 +66,7 @@ export function timelineWikiLinkCompletions(
 
 export function timelineTagCompletions(app: App): Completion[] {
   const tags = new Set<string>();
-  for (const file of app.vault.getMarkdownFiles()) {
+  for (const file of timelineMetadataFiles(app)) {
     for (const tag of getAllTags(app.metadataCache.getFileCache(file) ?? {}) ?? []) {
       tags.add(tag.replace(/^#/, ""));
     }
@@ -297,15 +297,46 @@ function blockCompletions(
 }
 
 function globalHeadingCompletions(app: App, sourcePath: string, linkStart: number): Completion[] {
-  return app.vault.getMarkdownFiles().flatMap((file) => (
+  return timelineMetadataFiles(app, sourcePath).flatMap((file) => (
     headingCompletions(app, file, sourcePath, linkStart)
   ));
 }
 
 function globalBlockCompletions(app: App, sourcePath: string, linkStart: number): Completion[] {
-  return app.vault.getMarkdownFiles().flatMap((file) => (
+  return timelineMetadataFiles(app, sourcePath).flatMap((file) => (
     blockCompletions(app, file, sourcePath, linkStart)
   ));
+}
+
+/**
+ * Build completion candidates from Obsidian's existing link index instead of
+ * requesting every vault path. This covers notes participating in the link
+ * graph (including unresolved-link source notes) while keeping unrelated,
+ * unlinked vault paths outside Tradecraft's access scope.
+ */
+function timelineMetadataFiles(app: App, sourcePath = ""): TFile[] {
+  const paths = new Set<string>();
+  if (sourcePath) paths.add(sourcePath);
+
+  for (const [source, destinations] of Object.entries(app.metadataCache.resolvedLinks ?? {})) {
+    paths.add(source);
+    for (const destination of Object.keys(destinations)) paths.add(destination);
+  }
+
+  for (const [source, destinations] of Object.entries(app.metadataCache.unresolvedLinks ?? {})) {
+    paths.add(source);
+    for (const linkpath of Object.keys(destinations)) {
+      const destination = app.metadataCache.getFirstLinkpathDest(linkpath, source);
+      if (destination) paths.add(destination.path);
+    }
+  }
+
+  const files: TFile[] = [];
+  for (const path of paths) {
+    const file = app.vault.getFileByPath(path);
+    if (file?.extension.toLowerCase() === "md") files.push(file);
+  }
+  return files.sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function replaceWholeWikiLink(

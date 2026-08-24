@@ -27,8 +27,12 @@ describe("timeline wiki-link suggestions", () => {
       parent: { path: "Leisure" },
     } as TFile;
     const app = {
-      vault: { getMarkdownFiles: vi.fn(() => [file]) },
-      metadataCache: { getFileCache: vi.fn(() => null) },
+      vault: { getFileByPath: vi.fn((path: string) => path === file.path ? file : null) },
+      metadataCache: {
+        resolvedLinks: { [file.path]: {} },
+        unresolvedLinks: {},
+        getFileCache: vi.fn(() => null),
+      },
       fileManager: { generateMarkdownLink: vi.fn(() => "[[Leisure/Books to read]]") },
     } as unknown as App;
 
@@ -56,10 +60,11 @@ describe("timeline wiki-link suggestions", () => {
     } as TFile;
     const app = {
       vault: {
-        getFiles: vi.fn(() => [file]),
-        getMarkdownFiles: vi.fn(() => [file]),
+        getFileByPath: vi.fn((path: string) => path === file.path ? file : null),
       },
       metadataCache: {
+        resolvedLinks: { [file.path]: {} },
+        unresolvedLinks: {},
         getFileCache: vi.fn(() => ({
           frontmatter: { aliases: ["Roadmap"] },
           tags: [{ tag: "#launch" }, { tag: "#product/roadmap" }],
@@ -87,10 +92,13 @@ describe("timeline wiki-link suggestions", () => {
     } as TFile;
     const app = {
       vault: {
-        getFiles: vi.fn(() => [file]),
-        getMarkdownFiles: vi.fn(() => [file]),
+        getFileByPath: vi.fn((path: string) => path === file.path ? file : null),
       },
-      metadataCache: { getFileCache: vi.fn(() => null) },
+      metadataCache: {
+        resolvedLinks: { [file.path]: {} },
+        unresolvedLinks: {},
+        getFileCache: vi.fn(() => null),
+      },
       fileManager: { generateMarkdownLink: vi.fn(() => "[[Books to read]]") },
     } as unknown as App;
     const host = document.body.appendChild(document.createElement("div"));
