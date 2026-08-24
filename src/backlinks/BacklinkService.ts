@@ -203,7 +203,7 @@ export class BacklinkService {
   }
 
   private debug(message: string): void {
-    if (this.getSettings().debug) console.debug(`[Dossier] ${message}`);
+    if (this.getSettings().debug) console.debug(`[Tradecraft] ${message}`);
   }
 }
 

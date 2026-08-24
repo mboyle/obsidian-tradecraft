@@ -57,7 +57,7 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
     ));
 
     this.addSettingTab(new DossierSettingTab(this.app, this));
-    this.registerHoverLinkSource("dossier", { display: "Dossier", defaultMod: false });
+    this.registerHoverLinkSource("dossier", { display: "Tradecraft", defaultMod: false });
     this.registerMarkdownPostProcessor(this.readingRenderer.postProcessor, 100);
     this.registerEditorExtension(createLivePreviewExtension(this));
     this.registerCommands();

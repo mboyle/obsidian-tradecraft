@@ -4,11 +4,11 @@ Obsidian does not require a second long-form marketing page. The Community direc
 
 ## Proposed directory metadata
 
-The public product name is **Tradecraft**. Keep the stable plugin ID `dossier` so existing installations continue to work. The manifest metadata is:
+The public product name and stable plugin ID are both **Tradecraft**. The manifest metadata is:
 
 ```json
 {
-  "id": "dossier",
+  "id": "tradecraft",
   "name": "Tradecraft",
   "author": "Michael Boyle",
   "description": "Contextual backlinks, readable Daily Note dates, compact week navigation, and a continuous desktop timeline."

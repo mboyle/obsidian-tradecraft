@@ -70,14 +70,14 @@ export class BacklinksRenderer extends Component implements HoverParent {
       if (generation !== this.generation) return;
       await this.draw(snapshot, generation);
       if (this.host.getSettings().debug) {
-        console.debug(`[Dossier] Rendered ${this.targetFile.path} in ${(performance.now() - started).toFixed(1)}ms`);
+        console.debug(`[Tradecraft] Rendered ${this.targetFile.path} in ${(performance.now() - started).toFixed(1)}ms`);
       }
     } catch (error) {
       if (generation === this.generation) {
         this.rootEl.replaceChildren();
         this.rootEl.classList.add("is-empty");
         this.onLayoutChange?.();
-        console.error(`[Dossier] Failed to render references for ${this.targetFile.path}`, error);
+        console.error(`[Tradecraft] Failed to render references for ${this.targetFile.path}`, error);
       }
     }
   }

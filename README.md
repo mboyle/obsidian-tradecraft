@@ -8,9 +8,9 @@ Everything runs locally inside Obsidian. There are no accounts, network requests
 
 ![Contextual backlinks rendered beneath a product note](docs/images/contextual-backlinks.png)
 
-## Dossier — understand backlinks in context
+## Contextual backlinks — understand references in context
 
-Obsidian tells you which notes link here. Dossier shows you what you were saying when you made the link.
+Obsidian tells you which notes link here. Tradecraft shows you what you were saying when you made the link.
 
 Linked references appear below the current note as rendered excerpts. Source notes remain one click away, but routine context is readable without leaving the page.
 
@@ -23,7 +23,7 @@ Linked references appear below the current note as rendered excerpts. Source not
 - Supports compact, normal, and expanded context; source grouping; sorting; collapsing; pagination; and folder exclusions
 - Updates after edits, creates, deletes, and renames
 
-Dossier does not change either note merely to display a reference. It follows explicit links; unlinked mentions are outside its scope, and embeds are optional.
+Tradecraft does not change either note merely to display a reference. It follows explicit links; unlinked mentions are outside its scope, and embeds are optional.
 
 ## Chronograph — Daily Notes made readable
 
@@ -105,7 +105,7 @@ An explicit frontmatter value takes precedence over the global setting and comma
 Until Tradecraft is available in Obsidian's Community Plugins directory, install a release manually:
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/mboyle/tradecraft/releases/latest).
-2. Put them in `<your-vault>/.obsidian/plugins/dossier/`.
+2. Put them in `<your-vault>/.obsidian/plugins/tradecraft/`.
 3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
 ## Privacy
@@ -125,7 +125,7 @@ npm run check
 npm run bench
 ```
 
-For local development, place or symlink this repository at `<your-vault>/.obsidian/plugins/dossier/`, run `npm run dev`, and reload Obsidian.
+For local development, place or symlink this repository at `<your-vault>/.obsidian/plugins/tradecraft/`, run `npm run dev`, and reload Obsidian.
 
 ## License
 

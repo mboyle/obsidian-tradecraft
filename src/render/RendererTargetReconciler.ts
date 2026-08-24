@@ -3,7 +3,7 @@ import type { BacklinksRenderer } from "./BacklinksRenderer";
 
 /**
  * Mobile Obsidian reuses a MarkdownView and its DOM when opening another file.
- * Rebind any surviving Dossier renderer to the file that now owns that DOM.
+ * Rebind any surviving Tradecraft renderer to the file that now owns that DOM.
  */
 export function reconcileRendererTargets(
   renderers: Iterable<BacklinksRenderer>,
