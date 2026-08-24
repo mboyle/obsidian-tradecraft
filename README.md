@@ -104,7 +104,7 @@ An explicit frontmatter value takes precedence over the global setting and comma
 
 Until Tradecraft is available in Obsidian's Community Plugins directory, install a release manually:
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/mboyle/tradecraft/releases/latest).
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/mboyle/obsidian-tradecraft/releases/latest).
 2. Put them in `<your-vault>/.obsidian/plugins/tradecraft/`.
 3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
