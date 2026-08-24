@@ -1,37 +1,38 @@
-import { moment } from "obsidian";
 import type { DailyNoteWeekStart } from "../types";
-
-type Moment = moment.Moment;
+import { obsidianMoment, type ObsidianMoment } from "../utils/ObsidianMoment";
 
 export const DAILY_DATE_KEY_FORMAT = "YYYY-MM-DD";
 
-export function dailyDateKey(date: Moment): string {
+export function dailyDateKey(date: ObsidianMoment): string {
   return date.clone().format(DAILY_DATE_KEY_FORMAT);
 }
 
-export function dailyDateFromKey(key: string): Moment | null {
-  const parsed = moment(key, DAILY_DATE_KEY_FORMAT, true);
+export function dailyDateFromKey(key: string): ObsidianMoment | null {
+  const parsed = obsidianMoment(key, DAILY_DATE_KEY_FORMAT, true);
   return parsed.isValid() ? parsed.startOf("day") : null;
 }
 
-export function startOfDailyWeek(date: Moment, weekStart: DailyNoteWeekStart): Moment {
+export function startOfDailyWeek(date: ObsidianMoment, weekStart: DailyNoteWeekStart): ObsidianMoment {
   const startDay = weekStart === "sunday" ? 0 : 1;
   const offset = (date.day() - startDay + 7) % 7;
   return date.clone().startOf("day").subtract(offset, "days");
 }
 
-export function dailyWeekDates(start: Moment): Moment[] {
+export function dailyWeekDates(start: ObsidianMoment): ObsidianMoment[] {
   return Array.from({ length: 7 }, (_, index) => start.clone().add(index, "days"));
 }
 
-export function isDateInWeek(date: Moment, start: Moment): boolean {
+export function isDateInWeek(date: ObsidianMoment, start: ObsidianMoment): boolean {
   const key = dailyDateKey(date);
   const startKey = dailyDateKey(start);
   const endKey = dailyDateKey(start.clone().add(6, "days"));
   return key >= startKey && key <= endKey;
 }
 
-export function monthForDisplayedWeek(selected: Moment, visibleStart: Moment): Moment {
+export function monthForDisplayedWeek(
+  selected: ObsidianMoment,
+  visibleStart: ObsidianMoment,
+): ObsidianMoment {
   return isDateInWeek(selected, visibleStart) ? selected.clone() : visibleStart.clone().add(3, "days");
 }
 

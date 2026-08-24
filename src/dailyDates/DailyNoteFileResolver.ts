@@ -1,14 +1,13 @@
-import { Notice, TFile, moment, type App } from "obsidian";
+import { Notice, TFile, type App } from "obsidian";
 import type { DailyNoteDateSettings, DailyNoteMissingBehavior } from "../types";
 import { normalizeDailyNoteFolder } from "../settings/Settings";
+import { obsidianMoment, type ObsidianMoment } from "../utils/ObsidianMoment";
 import type { DailyNoteDisplayService } from "./DailyNoteDisplayService";
-
-type Moment = moment.Moment;
 
 interface CoreDailyNotesPlugin {
   options?: { folder?: unknown };
   getFormat?: () => unknown;
-  getDailyNote?: (date?: Moment) => Promise<TFile | null | undefined>;
+  getDailyNote?: (date?: ObsidianMoment) => Promise<TFile | null | undefined>;
 }
 
 interface InternalPluginRegistry {
@@ -25,7 +24,7 @@ export class DailyNoteFileResolver {
     private readonly getSettings: () => DailyNoteDateSettings,
   ) {}
 
-  async resolve(date: Moment, behavior: DailyNoteMissingBehavior): Promise<TFile | null> {
+  async resolve(date: ObsidianMoment, behavior: DailyNoteMissingBehavior): Promise<TFile | null> {
     const path = this.service.dateToDailyFilePath(date);
     const existing = this.app.vault.getFileByPath(path);
     if (existing) return existing;
@@ -42,7 +41,7 @@ export class DailyNoteFileResolver {
     return this.createBlank(path);
   }
 
-  private async createWithDailyNotes(date: Moment): Promise<{ available: boolean; file: TFile | null }> {
+  private async createWithDailyNotes(date: ObsidianMoment): Promise<{ available: boolean; file: TFile | null }> {
     const registry = (this.app as AppWithInternalPlugins).internalPlugins;
     const candidate = registry?.getEnabledPluginById?.("daily-notes");
     if (!isCoreDailyNotesPlugin(candidate)) return { available: false, file: null };
@@ -127,6 +126,6 @@ function isCoreDailyNotesPlugin(value: unknown): value is CoreDailyNotesPlugin {
   return typeof plugin.getDailyNote === "function" && typeof plugin.getFormat === "function";
 }
 
-export function todayAtStartOfDay(): Moment {
-  return moment().startOf("day");
+export function todayAtStartOfDay(): ObsidianMoment {
+  return obsidianMoment().startOf("day");
 }

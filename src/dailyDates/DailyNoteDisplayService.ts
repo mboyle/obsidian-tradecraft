@@ -1,8 +1,7 @@
-import { moment, type TFile } from "obsidian";
+import type { TFile } from "obsidian";
 import type { DailyNoteDateSettings } from "../types";
 import { normalizeDailyNoteFolder } from "../settings/Settings";
-
-type Moment = moment.Moment;
+import { obsidianMoment, type ObsidianMoment } from "../utils/ObsidianMoment";
 
 export type DailyNoteDisplayFile = Pick<TFile, "path" | "basename" | "extension">;
 
@@ -53,17 +52,17 @@ export class DailyNoteDisplayService {
     return date.format(settings.titleFormat);
   }
 
-  getDailyNoteDate(file: DailyNoteDisplayFile): Moment | null {
+  getDailyNoteDate(file: DailyNoteDisplayFile): ObsidianMoment | null {
     const settings = this.getSettings();
     if (file.extension.toLowerCase() !== "md" || !matchesDailyNoteFolder(file.path, settings.folder)) {
       return null;
     }
     if (validateFilenameFormat(settings.filenameFormat)) return null;
-    const parsed = moment(file.basename, settings.filenameFormat, true);
+    const parsed = obsidianMoment(file.basename, settings.filenameFormat, true);
     return parsed.isValid() ? parsed.startOf("day") : null;
   }
 
-  dateToDailyFilePath(date: Moment): string {
+  dateToDailyFilePath(date: ObsidianMoment): string {
     const settings = this.getSettings();
     const filename = date.clone().format(settings.filenameFormat);
     const folder = normalizeDailyNoteFolder(settings.folder);
@@ -73,7 +72,7 @@ export class DailyNoteDisplayService {
   getPreview(): DailyNoteDatePreview {
     const settings = this.getSettings();
     const formatError = validateFormats(settings.filenameFormat, settings.displayFormat, settings.titleFormat);
-    const sample = moment(PREVIEW_DATE);
+    const sample = obsidianMoment(PREVIEW_DATE);
     const source = sample.format(settings.filenameFormat);
     if (formatError) return { valid: false, source, error: formatError };
     return {
@@ -101,7 +100,7 @@ export class DailyNoteDisplayService {
     if (!settings.enabled || file.extension.toLowerCase() !== "md") return null;
     if (!matchesDailyNoteFolder(file.path, settings.folder)) return null;
     if (formatError) return null;
-    const parsed = moment(file.basename, settings.filenameFormat, true);
+    const parsed = obsidianMoment(file.basename, settings.filenameFormat, true);
     if (!parsed.isValid()) return null;
     return parsed.format(settings.displayFormat);
   }
@@ -129,9 +128,9 @@ export function validateFormats(
 
 export function validateFilenameFormat(filenameFormat: string): string | undefined {
   if (!filenameFormat.trim()) return "Enter a filename date format.";
-  const sample = moment(PREVIEW_DATE);
+  const sample = obsidianMoment(PREVIEW_DATE);
   const source = sample.format(filenameFormat);
-  const parsed = moment(source, filenameFormat, true);
+  const parsed = obsidianMoment(source, filenameFormat, true);
   if (
     !parsed.isValid()
     || parsed.year() !== PREVIEW_DATE[0]

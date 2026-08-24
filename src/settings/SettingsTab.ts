@@ -1,4 +1,10 @@
-import { Plugin, PluginSettingTab, Setting, type App } from "obsidian";
+import {
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  type App,
+  type SettingDefinitionItem,
+} from "obsidian";
 import type { DossierSettings } from "../types";
 import type { DailyNoteDatePreview } from "../dailyDates/DailyNoteDisplayService";
 
@@ -10,14 +16,33 @@ export interface SettingsHost {
 
 export class DossierSettingTab extends PluginSettingTab {
   private readonly host: SettingsHost;
+  private settingsContainerEl: HTMLElement;
 
   constructor(app: App, host: Plugin & SettingsHost) {
     super(app, host);
     this.host = host;
+    this.settingsContainerEl = this.containerEl;
+  }
+
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [{
+      name: "Tradecraft settings",
+      desc: "Contextual backlinks, readable Daily Notes, navigation, and timeline behavior.",
+      aliases: SETTING_SEARCH_ALIASES,
+      render: (setting) => {
+        setting.settingEl.empty();
+        setting.settingEl.addClass("tradecraft-settings-definition");
+        this.renderSettings(setting.settingEl);
+      },
+    }];
   }
 
   display(): void {
-    const { containerEl } = this;
+    this.renderSettings(this.containerEl);
+  }
+
+  private renderSettings(containerEl: HTMLElement): void {
+    this.settingsContainerEl = containerEl;
     containerEl.empty();
     const settings = this.host.settings;
 
@@ -195,11 +220,11 @@ export class DossierSettingTab extends PluginSettingTab {
           if (value !== "compact" && value !== "normal" && value !== "expanded") return;
           settings.contextMode = value;
           await this.host.saveSettingsAndRefresh();
-          this.display();
+          this.refreshSettings();
         }));
     this.toggle("Show advanced context settings", settings.showAdvancedSettings, (value) => {
       settings.showAdvancedSettings = value;
-      queueMicrotask(() => this.display());
+      queueMicrotask(() => this.refreshSettings());
     });
     if (settings.showAdvancedSettings) {
       const profile = settings.contextProfiles[settings.contextMode];
@@ -274,7 +299,7 @@ export class DossierSettingTab extends PluginSettingTab {
   }
 
   private toggle(name: string, value: boolean, update: (value: boolean) => void): void {
-    new Setting(this.containerEl).setName(name).addToggle((toggle) => toggle.setValue(value).onChange(async (next) => {
+    new Setting(this.settingsContainerEl).setName(name).addToggle((toggle) => toggle.setValue(value).onChange(async (next) => {
       update(next);
       await this.host.saveSettingsAndRefresh();
     }));
@@ -287,7 +312,7 @@ export class DossierSettingTab extends PluginSettingTab {
     max: number,
     update: (value: number) => void,
   ): void {
-    new Setting(this.containerEl).setName(name).addText((text) => {
+    new Setting(this.settingsContainerEl).setName(name).addText((text) => {
       text.inputEl.type = "number";
       text.inputEl.min = String(min);
       text.inputEl.max = String(max);
@@ -301,7 +326,7 @@ export class DossierSettingTab extends PluginSettingTab {
   }
 
   private prefixList(name: string, value: string[], update: (value: string[]) => void): void {
-    new Setting(this.containerEl)
+    new Setting(this.settingsContainerEl)
       .setName(name)
       .setDesc("One case-sensitive vault folder prefix per line.")
       .addTextArea((text) => text.setValue(value.join("\n")).onChange(async (raw) => {
@@ -320,7 +345,55 @@ export class DossierSettingTab extends PluginSettingTab {
       : preview.error ?? "Invalid date format.");
     setting.descEl.classList.toggle("dossier-setting-error", !preview.valid);
   }
+
+  private refreshSettings(): void {
+    this.renderSettings(this.settingsContainerEl);
+  }
 }
+
+const SETTING_SEARCH_ALIASES = [
+  "Show contextual backlinks",
+  "Show heading",
+  "Heading",
+  "Show reference count",
+  "Show source heading",
+  "Group by source note",
+  "Show empty section",
+  "Use readable daily note dates",
+  "Daily notes folder",
+  "Filename date format",
+  "Readable date format",
+  "Inline title date format",
+  "Format dates in File Explorer",
+  "Format the inline note title",
+  "Format tab titles",
+  "Format linked-reference labels",
+  "Show weekly navigator",
+  "Keep navigator visible while scrolling",
+  "Week starts on",
+  "Show month header",
+  "Show today indicator",
+  "Show indicators for existing notes",
+  "When a date has no note",
+  "Swipe animation",
+  "Enable Daily Timeline",
+  "Open Daily Timeline on startup",
+  "Loaded date window",
+  "Context size",
+  "Show advanced context settings",
+  "Neighbor blocks",
+  "Maximum excerpt length",
+  "Sort references",
+  "Parse dates from filenames",
+  "Filename date formats",
+  "Date property",
+  "Initial references shown",
+  "Include embeds",
+  "Open source on excerpt click",
+  "Excluded source folders",
+  "Excluded target folders",
+  "Enable debug logging",
+];
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);

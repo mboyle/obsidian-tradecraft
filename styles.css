@@ -10,7 +10,7 @@
   text-align: start;
 }
 
-.dossier-backlinks:has(> .dossier-backlinks-header, > .dossier-backlinks-body) {
+.dossier-backlinks:not(:empty):not(.is-empty) {
   margin-block: 1.75rem 0.75rem;
   padding-block-start: 0.7rem;
   border-block-start: 1px solid var(--background-modifier-border);
@@ -33,11 +33,10 @@
   padding-block-end: calc(3rem + var(--safe-area-inset-bottom));
 }
 
-.markdown-preview-view.dossier-has-reading-fallback > .markdown-preview-sizer,
-.markdown-preview-view:has(> .dossier-reading-fallback) > .markdown-preview-sizer {
-  min-height: 0 !important;
-  height: auto !important;
-  padding-block-end: 0 !important;
+.markdown-preview-view.dossier-has-reading-fallback > div.markdown-preview-sizer {
+  min-height: 0;
+  height: auto;
+  padding-block-end: 0;
 }
 
 .dossier-backlinks:empty,
@@ -67,14 +66,14 @@
 .dossier-backlinks-header {
   display: flex;
   align-items: center;
-  justify-content: flex-start !important;
+  justify-content: flex-start;
   gap: 0.42em;
   width: 100%;
   min-height: 1.6rem;
   margin-inline: 0;
   padding: 0.05rem 0;
   cursor: pointer;
-  text-align: start !important;
+  text-align: start;
 }
 
 .dossier-backlinks-header::before,
@@ -238,6 +237,12 @@
   color: var(--text-error);
 }
 
+.tradecraft-settings-definition.setting-item {
+  display: block;
+  padding: 0;
+  border: 0;
+}
+
 /* Desktop Daily Timeline. Only a bounded set of nearby dates stays mounted. */
 .view-content.dossier-daily-timeline {
   min-height: 0;
@@ -297,19 +302,19 @@
   font: inherit;
 }
 
-button.dossier-timeline-title,
-button.dossier-timeline-title:hover,
-button.dossier-timeline-title:focus,
-button.dossier-timeline-title:active,
-button.dossier-timeline-empty-stub,
-button.dossier-timeline-empty-stub:hover,
-button.dossier-timeline-empty-stub:focus,
-button.dossier-timeline-empty-stub:active {
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  transform: none !important;
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-title,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-title:hover,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-title:focus,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-title:active,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-empty-stub,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-empty-stub:hover,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-empty-stub:focus,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-empty-stub:active {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
 .dossier-timeline-title {
@@ -323,10 +328,10 @@ button.dossier-timeline-empty-stub:active {
 }
 
 .dossier-timeline-day.is-today .dossier-timeline-title {
-  text-decoration: underline;
-  text-decoration-color: var(--interactive-accent);
-  text-decoration-thickness: 0.12em;
-  text-underline-offset: 0.22em;
+  background-image: linear-gradient(var(--interactive-accent), var(--interactive-accent));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 0.12em;
 }
 
 .dossier-timeline-open-note {
@@ -361,9 +366,10 @@ button.dossier-timeline-empty-stub:active {
 
 .dossier-timeline-title:focus-visible {
   outline: 0;
-  text-decoration: underline;
-  text-decoration-color: var(--interactive-accent);
-  text-underline-offset: 0.18em;
+  background-image: linear-gradient(var(--interactive-accent), var(--interactive-accent));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 0.1em;
 }
 
 .dossier-timeline-body {
@@ -384,16 +390,16 @@ button.dossier-timeline-empty-stub:active {
   font-size: var(--font-text-size);
 }
 
-.dossier-timeline-empty-stub,
-button.dossier-timeline-empty-stub {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
+.dossier-daily-timeline .dossier-timeline-day .dossier-timeline-empty-stub,
+.dossier-daily-timeline .dossier-timeline-day button.dossier-timeline-empty-stub {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 100%;
-  height: auto !important;
+  height: auto;
   min-height: calc(var(--line-height-normal) * 1em);
-  margin: 0 !important;
-  padding: 0 0 0 1.25em !important;
+  margin: 0;
+  padding: 0 0 0 1.25em;
   color: var(--list-marker-color, var(--text-faint));
   text-align: start;
   cursor: text;
@@ -442,9 +448,9 @@ button.dossier-timeline-empty-stub {
   caret-color: var(--caret-color, var(--text-normal));
 }
 
-.dossier-timeline-editor .cm-cursor,
-.dossier-timeline-editor .cm-dropCursor {
-  border-inline-start-color: var(--caret-color, var(--text-normal)) !important;
+.dossier-timeline-editor .cm-editor.cm-focused .cm-cursor,
+.dossier-timeline-editor .cm-editor.cm-focused .cm-dropCursor {
+  border-inline-start-color: var(--caret-color, var(--text-normal));
 }
 
 .dossier-timeline-editor .cm-line {
@@ -685,7 +691,6 @@ button.dossier-timeline-empty-stub {
 .dossier-timeline-editor .dossier-timeline-lp-link {
   color: var(--link-color);
   text-decoration: var(--link-decoration);
-  text-decoration-thickness: var(--link-decoration-thickness);
   text-underline-offset: var(--link-decoration-offset);
 }
 
@@ -747,10 +752,10 @@ button.dossier-timeline-empty-stub {
   min-height: 0;
 }
 
-.dossier-week-nav-host.is-sticky > :is(.markdown-source-view, .markdown-reading-view) {
+.view-content.dossier-week-nav-host.is-sticky > :is(.markdown-source-view, .markdown-reading-view) {
   flex: 1 1 0;
   min-height: 0;
-  height: 0 !important;
+  height: 0;
   overflow: hidden;
 }
 
@@ -803,22 +808,22 @@ button.dossier-timeline-empty-stub {
   font: inherit;
 }
 
-.dossier-week-nav button.dossier-week-nav-month,
-.dossier-week-nav button.dossier-week-nav-date,
-.dossier-week-nav button.dossier-week-nav-month:hover,
-.dossier-week-nav button.dossier-week-nav-date:hover,
-.dossier-week-nav button.dossier-week-nav-month:focus,
-.dossier-week-nav button.dossier-week-nav-date:focus {
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+.workspace-leaf-content .dossier-week-nav button.dossier-week-nav-month,
+.workspace-leaf-content .dossier-week-nav button.dossier-week-nav-date,
+.workspace-leaf-content .dossier-week-nav button.dossier-week-nav-month:hover,
+.workspace-leaf-content .dossier-week-nav button.dossier-week-nav-date:hover,
+.workspace-leaf-content .dossier-week-nav button.dossier-week-nav-month:focus,
+.workspace-leaf-content .dossier-week-nav button.dossier-week-nav-date:focus {
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .dossier-week-nav-month {
   display: block;
   max-width: 100%;
   min-height: 0;
-  height: auto !important;
+  height: auto;
   margin: 0 auto 8px;
   padding: 0;
   color: var(--text-normal);
@@ -871,7 +876,7 @@ button.dossier-timeline-empty-stub {
   gap: 2px;
   min-width: 0;
   min-height: 2.35rem;
-  height: auto !important;
+  height: auto;
   padding: 0.05rem 0 0.18rem;
   cursor: pointer;
   border-radius: var(--radius-s);
@@ -951,8 +956,8 @@ button.dossier-timeline-empty-stub {
   background: var(--text-faint);
 }
 
-.dossier-week-nav-host.has-dossier-deferred-daily > :is(.markdown-source-view, .markdown-reading-view) {
-  display: none !important;
+.view-content.dossier-week-nav-host.has-dossier-deferred-daily > :is(.markdown-source-view, .markdown-reading-view) {
+  display: none;
 }
 
 .dossier-deferred-daily {
@@ -1002,7 +1007,7 @@ button.dossier-timeline-empty-stub {
 
 @media (prefers-reduced-motion: reduce) {
   .dossier-week-nav-track {
-    transition: none !important;
+    transition: none;
   }
 }
 
@@ -1038,7 +1043,7 @@ body.is-mobile .workspace-leaf-content[data-type="markdown"] .view-content.dossi
 /* The week strip is navigation for constrained layouts, not desktop note chrome. */
 @media (min-width: 701px) {
   body:not(.is-mobile) .workspace-leaf-content[data-type="markdown"] .dossier-week-nav {
-    display: none !important;
+    display: none;
   }
 
   body:not(.is-mobile) .workspace-leaf-content[data-type="markdown"] .view-content.dossier-week-nav-host.is-sticky {
@@ -1047,7 +1052,7 @@ body.is-mobile .workspace-leaf-content[data-type="markdown"] .view-content.dossi
   }
 
   body:not(.is-mobile) .workspace-leaf-content[data-type="markdown"] .view-content.dossier-week-nav-host.is-sticky > :is(.markdown-source-view, .markdown-reading-view) {
-    height: 100% !important;
+    height: 100%;
     min-height: 0;
     overflow: hidden;
   }

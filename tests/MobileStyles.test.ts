@@ -6,7 +6,7 @@ const styles = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 describe("mobile navigator styles", () => {
   it("shows the week strip only on mobile or narrow layouts", () => {
     expect(styles).toMatch(
-      /@media \(min-width: 701px\)\s*\{[\s\S]*?body:not\(\.is-mobile\)[^{]*\.dossier-week-nav\s*\{\s*display:\s*none !important;/,
+      /@media \(min-width: 701px\)\s*\{[\s\S]*?body:not\(\.is-mobile\)[^{]*\.dossier-week-nav\s*\{\s*display:\s*none;/,
     );
   });
 
@@ -31,7 +31,7 @@ describe("mobile navigator styles", () => {
   it("hides backlink separators while the reference section is empty", () => {
     expect(styles).toMatch(/\.dossier-backlinks\.is-empty\s*\{\s*display:\s*none;/);
     expect(styles).toMatch(
-      /\.dossier-backlinks:has\(> \.dossier-backlinks-header, > \.dossier-backlinks-body\)\s*\{[^}]*border-block-start:/s,
+      /\.dossier-backlinks:not\(:empty\):not\(\.is-empty\)\s*\{[^}]*border-block-start:/s,
     );
     expect(styles).not.toMatch(/\.dossier-backlinks\s*\{[^}]*border-block-start:/s);
   });
@@ -39,7 +39,7 @@ describe("mobile navigator styles", () => {
   it("does not add space above the month heading", () => {
     expect(styles).toMatch(/\.dossier-week-nav\s*\{[^}]*padding-block:\s*0 0\.15rem;/s);
     expect(styles).toMatch(
-      /\.dossier-week-nav-month\s*\{[^}]*min-height:\s*0;[^}]*height:\s*auto !important;[^}]*margin:\s*0 auto 8px;[^}]*padding:\s*0;/s,
+      /\.dossier-week-nav-month\s*\{[^}]*min-height:\s*0;[^}]*height:\s*auto;[^}]*margin:\s*0 auto 8px;[^}]*padding:\s*0;/s,
     );
   });
 
@@ -57,7 +57,7 @@ describe("mobile navigator styles", () => {
 
   it("replaces the backing Markdown surface while a missing date is still unsaved", () => {
     expect(styles).toMatch(
-      /\.dossier-week-nav-host\.has-dossier-deferred-daily\s*>\s*:is\(\.markdown-source-view, \.markdown-reading-view\)\s*\{\s*display:\s*none !important;/s,
+      /\.view-content\.dossier-week-nav-host\.has-dossier-deferred-daily\s*>\s*:is\(\.markdown-source-view, \.markdown-reading-view\)\s*\{\s*display:\s*none;/s,
     );
     expect(styles).toMatch(/\.dossier-deferred-daily\s*\{[^}]*overflow-y:\s*auto;/s);
     expect(styles).toMatch(
@@ -72,5 +72,11 @@ describe("mobile navigator styles", () => {
     expect(styles).toMatch(
       /\.dossier-timeline-editor \.dossier-timeline-lp-bullet\s*\{[^}]*transform:\s*translate\(4px, 0\.75px\);/s,
     );
+  });
+
+  it("avoids costly selectors and forced cascade overrides", () => {
+    expect(styles).not.toContain(":has(");
+    expect(styles).not.toContain("!important");
+    expect(styles).not.toMatch(/text-decoration-(?:color|thickness)\s*:/);
   });
 });

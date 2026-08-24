@@ -1,4 +1,3 @@
-import { moment } from "obsidian";
 import type {
   ContextMode,
   DailyNoteDateSettings,
@@ -7,6 +6,7 @@ import type {
   DailyNoteWeekStart,
   DossierSettings,
 } from "../types";
+import { obsidianMoment } from "../utils/ObsidianMoment";
 
 export const DEFAULT_SETTINGS: DossierSettings = {
   enabled: true,
@@ -143,7 +143,7 @@ function clampWindowDays(value: unknown, fallback: number): number {
 function normalizeWeekStart(value: unknown): DailyNoteWeekStart {
   if (value === "sunday" || value === "monday") return value;
   try {
-    return moment.localeData().firstDayOfWeek() === 0 ? "sunday" : "monday";
+    return obsidianMoment.localeData().firstDayOfWeek() === 0 ? "sunday" : "monday";
   } catch {
     return "monday";
   }
