@@ -279,6 +279,7 @@ export class DailyTimelineView extends ItemView {
           EditorView.editable.of(false),
           EditorView.lineWrapping,
           ...timelineLivePreviewExtensions({
+            onTaskToggle: (from, to, checked) => void this.togglePreviewTask(day, content, from, to, checked),
             onLinkClick: ({ target, event }) => this.openTimelineLink(target, day.file?.path, event),
             onLinkHover: ({ target, event, targetEl }) => this.hoverTimelineLink(target, day.file?.path, event, targetEl),
             onLinkContext: ({ target, event }) => this.contextTimelineLink(target, day.file?.path, event),
@@ -289,7 +290,7 @@ export class DailyTimelineView extends ItemView {
             mousedown: (event, preview) => {
               if (event.button !== 0) return false;
               const target = event.target;
-              if (target instanceof Element && target.closest("a, button, textarea, select, summary")) {
+              if (target instanceof Element && target.closest("a, button, input, textarea, select, summary")) {
                 return false;
               }
               const anchor = preview.posAtCoords({ x: event.clientX, y: event.clientY }, false);
@@ -302,6 +303,33 @@ export class DailyTimelineView extends ItemView {
       }),
     });
     day.preview = view;
+  }
+
+  private async togglePreviewTask(
+    day: TimelineDay,
+    content: string,
+    from: number,
+    to: number,
+    checked: boolean,
+  ): Promise<void> {
+    const file = day.file;
+    if (!file || this.activeEditor?.day === day) return;
+    let conflicted = false;
+    try {
+      await this.app.vault.process(file, (current) => {
+        if (dailyContentForEditing(current) !== content) {
+          conflicted = true;
+          return current;
+        }
+        // Keep all original content, including the empty-note presentation convention.
+        return current.slice(0, from) + (checked ? "[x]" : "[ ]") + current.slice(to);
+      });
+      if (conflicted) new Notice("Tradecraft: this daily note changed elsewhere. The task was not changed; try again after it refreshes.");
+    } catch (error) {
+      console.error("Tradecraft: failed to toggle a Daily Note task", error);
+      new Notice(`Could not save task: ${file.path}`);
+    }
+    if (day.el.isConnected) await this.renderDay(day);
   }
 
   private async activateEditor(

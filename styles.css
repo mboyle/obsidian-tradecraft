@@ -468,10 +468,6 @@
   cursor: text;
 }
 
-.dossier-timeline-editor.is-readonly input {
-  pointer-events: none;
-}
-
 .dossier-timeline-editor .cm-line.dossier-timeline-lp-blank {
   min-height: var(--p-spacing);
   height: var(--p-spacing);
@@ -602,11 +598,25 @@
   transform: translate(4px, 0.75px);
 }
 
+.dossier-timeline-editor .dossier-timeline-lp-ordered {
+  display: inline-block;
+  text-align: right;
+  margin-inline-end: 0;
+  user-select: text;
+}
+
+.dossier-timeline-editor .dossier-timeline-lp-task-source {
+  color: var(--list-marker-color, var(--text-faint));
+}
+
 .dossier-timeline-editor .dossier-timeline-lp-task {
   width: var(--checkbox-size, 1em);
   height: var(--checkbox-size, 1em);
   margin: 0 0.55em 0 0.15em;
-  vertical-align: -0.12em;
+  /* Center against the text's x-height and neutralize theme editor offsets. */
+  vertical-align: middle;
+  top: 0;
+  transform: none;
   accent-color: var(--interactive-accent);
   cursor: pointer;
 }

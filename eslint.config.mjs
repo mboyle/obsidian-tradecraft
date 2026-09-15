@@ -36,6 +36,11 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/**/*.ts"],
+    // Test DOMs must load styles.css themselves; Obsidian loads it in production.
+    rules: { "obsidianmd/no-forbidden-elements": "off" },
+  },
+  {
     files: ["src/**/*.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",

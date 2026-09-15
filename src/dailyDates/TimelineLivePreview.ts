@@ -38,6 +38,7 @@ export interface TimelineLinkClick {
 }
 
 export interface TimelineLivePreviewOptions {
+  onTaskToggle?: (from: number, to: number, checked: boolean) => void;
   onLinkClick?: (click: TimelineLinkClick) => void;
   onLinkHover?: (click: TimelineLinkClick) => void;
   onLinkContext?: (click: TimelineLinkClick) => void;
@@ -50,8 +51,8 @@ export interface TimelineEmbed {
   kind: "image" | "audio" | "video" | "pdf";
 }
 
-const BULLET_PREFIX = /^(\s*)([-+*])\s+(?:\[([ xX])\]\s+)?(.*)$/;
-const ORDERED_PREFIX = /^(\s*)(\d+)([.)])\s+(.*)$/;
+const BULLET_PREFIX = /^(\s*)([-+*])[ \t]+(?:\[([ xX])\](?:[ \t]+|$))?(.*)$/;
+const ORDERED_PREFIX = /^(\s*)(\d+)([.)])[ \t]+(?:\[([ xX])\](?:[ \t]+|$))?(.*)$/;
 
 /**
  * A small presentation layer for the timeline's bounded CodeMirror editor.
@@ -110,12 +111,12 @@ export function listContinuationForLine(
   const indent = ordered[1] ?? "";
   const number = Number(ordered[2] ?? "1");
   const punctuation = ordered[3] ?? ".";
-  const content = ordered[4] ?? "";
+  const content = ordered[5] ?? "";
   if (content.trim().length === 0) {
     return { insert: "", replaceFrom: lineFrom, replaceTo: cursor };
   }
   return {
-    insert: `\n${indent}${number + 1}${punctuation} `,
+    insert: `\n${indent}${number + 1}${punctuation} ${ordered[4] === undefined ? "" : "[ ] "}`,
     replaceFrom: cursor,
     replaceTo: cursor,
   };
@@ -222,8 +223,8 @@ function decorateLine(
   } else {
     const bullet = BULLET_PREFIX.exec(text);
     const ordered = ORDERED_PREFIX.exec(text);
-    if (bullet) decorateBullet(view, from, bullet, ranges);
-    else if (ordered) decorateOrdered(view, from, ordered, ranges);
+    if (bullet) decorateBullet(view, from, bullet, ranges, options);
+    else if (ordered) decorateOrdered(view, from, ordered, ranges, options);
     else {
       const quote = /^(\s*)>\s?(.*)$/.exec(text);
       if (quote) {
@@ -253,16 +254,24 @@ function decorateBullet(
   lineFrom: number,
   match: RegExpExecArray,
   ranges: DecorationRange[],
+  options: TimelineLivePreviewOptions,
 ): void {
   const prefix = readBulletPrefix(match);
   const markerFrom = lineFrom + prefix.indent.length;
   addLineDecoration(lineFrom, `dossier-timeline-lp-list dossier-timeline-lp-depth-${listDepthForIndent(prefix.indent)}`, ranges);
   if (prefix.task !== undefined) {
-    const markerLength = prefix.marker.length + 1 + 4;
+    const taskFrom = lineFrom + match[0].indexOf("[", prefix.indent.length + 1);
+    const contentFrom = lineFrom + match[0].length - prefix.content.length;
+    if (selectionTouchesTaskPrefix(view, markerFrom, contentFrom)) {
+      // CSS already supplies the list indentation; keep the source indent hidden.
+      replace(lineFrom, taskFrom, undefined, ranges);
+      mark(taskFrom, taskFrom + 3, "dossier-timeline-lp-task-source", ranges);
+      return;
+    }
     replace(
       lineFrom,
-      markerFrom + markerLength,
-      new TaskWidget(prefix.task.toLowerCase() === "x", markerFrom + 2, markerFrom + 5),
+      contentFrom,
+      new TaskWidget(prefix.task.toLowerCase() === "x", taskFrom, taskFrom + 3, options.onTaskToggle),
       ranges,
     );
   } else {
@@ -276,6 +285,7 @@ function decorateOrdered(
   lineFrom: number,
   match: RegExpExecArray,
   ranges: DecorationRange[],
+  options: TimelineLivePreviewOptions,
 ): void {
   const indent = match[1] ?? "";
   const number = match[2] ?? "1";
@@ -283,7 +293,27 @@ function decorateOrdered(
   addLineDecoration(lineFrom, `dossier-timeline-lp-list dossier-timeline-lp-depth-${listDepthForIndent(indent)}`, ranges);
   const markerFrom = lineFrom + indent.length;
   const markerTo = markerFrom + number.length + punctuation.length + 1;
-  replace(lineFrom, markerTo, new OrderedWidget(`${number}${punctuation}`), ranges);
+  const task = match[4];
+  if (task !== undefined) {
+    const taskFrom = lineFrom + match[0].indexOf("[", indent.length + number.length + 1);
+    const contentFrom = lineFrom + match[0].length - (match[5] ?? "").length;
+    if (selectionTouchesTaskPrefix(view, markerFrom, contentFrom)) {
+      replace(markerTo, taskFrom, undefined, ranges);
+      mark(taskFrom, taskFrom + 3, "dossier-timeline-lp-task-source", ranges);
+    } else {
+      replace(markerTo, contentFrom, new TaskWidget(task.toLowerCase() === "x", taskFrom, taskFrom + 3, options.onTaskToggle), ranges);
+    }
+  }
+  // Keep numbers as real document text so clicks and arrow keys can place the
+  // caret between individual digits and punctuation. CSS supplies indentation.
+  replace(lineFrom, markerFrom, undefined, ranges);
+  mark(markerFrom, markerTo - 1, "dossier-timeline-lp-ordered", ranges);
+}
+
+function selectionTouchesTaskPrefix(view: EditorView, from: number, to: number): boolean {
+  if (view.state.readOnly) return false;
+  // Include both edges so a caret immediately beside the checkbox reveals its source.
+  return view.state.selection.ranges.some((range) => range.from <= to && range.to >= from);
 }
 
 function decorateInlineSyntax(
@@ -523,43 +553,37 @@ class BulletWidget extends WidgetType {
   }
 }
 
-class OrderedWidget extends WidgetType {
-  constructor(private readonly label: string) {
-    super();
-  }
-
-  eq(other: OrderedWidget): boolean {
-    return this.label === other.label;
-  }
-
-  toDOM(view: EditorView): HTMLElement {
-    const marker = view.dom.win.createSpan();
-    marker.className = "dossier-timeline-lp-ordered";
-    marker.setAttribute("aria-hidden", "true");
-    marker.textContent = this.label;
-    return marker;
-  }
-}
-
 class TaskWidget extends WidgetType {
   constructor(
     private readonly checked: boolean,
     private readonly from: number,
     private readonly to: number,
+    private readonly onToggle: TimelineLivePreviewOptions["onTaskToggle"],
   ) {
     super();
   }
 
   eq(other: TaskWidget): boolean {
-    return this.checked === other.checked && this.from === other.from && this.to === other.to;
+    return this.checked === other.checked && this.from === other.from && this.to === other.to
+      && this.onToggle === other.onToggle;
   }
 
   toDOM(view: EditorView): HTMLElement {
     const input = view.dom.win.createEl("input");
-    input.className = "dossier-timeline-lp-task";
+    input.className = "dossier-timeline-lp-task task-list-item-checkbox";
     input.type = "checkbox";
     input.checked = this.checked;
+    input.disabled = view.state.readOnly && !this.onToggle;
+    input.setAttribute("aria-label", this.checked ? "Mark task incomplete" : "Mark task complete");
+    input.addEventListener("mousedown", (event) => event.stopPropagation());
+    input.addEventListener("click", (event) => event.stopPropagation());
     input.addEventListener("change", () => {
+      if (view.state.readOnly) {
+        input.disabled = true;
+        this.onToggle?.(this.from, this.to, input.checked);
+        input.checked = this.checked;
+        return;
+      }
       view.dispatch({
         changes: { from: this.from, to: this.to, insert: input.checked ? "[x]" : "[ ]" },
         userEvent: "input",
@@ -569,8 +593,8 @@ class TaskWidget extends WidgetType {
     return input;
   }
 
-  ignoreEvent(event: Event): boolean {
-    return event.type !== "change" && event.type !== "click" && event.type !== "mousedown";
+  ignoreEvent(): boolean {
+    return true;
   }
 }
 

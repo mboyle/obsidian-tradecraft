@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import { TFile, type App, type WorkspaceLeaf } from "obsidian";
 import { DEFAULT_SETTINGS } from "../src/settings/Settings";
 import { DailyNoteDisplayService } from "../src/dailyDates/DailyNoteDisplayService";
@@ -19,6 +20,63 @@ describe("DailyTimelineView", () => {
   afterEach(() => {
     document.body.replaceChildren();
     vi.unstubAllGlobals();
+  });
+
+  it.each(["save", "conflict", "failure"])("handles feed checkbox %s without opening the editor", async (mode) => {
+    const settings = structuredClone(DEFAULT_SETTINGS);
+    const file = makeTFile("Daily/2026-08-20.md");
+    let content = "---\ntitle: Daily\n---\n  10. [ ] task\nOther text";
+    const containerEl = document.body.createDiv();
+    const contentEl = containerEl.createDiv({ cls: "view-content" });
+    const process = vi.fn(async (_file: TFile, update: (current: string) => string) => {
+      if (mode === "failure") throw new Error("write failed");
+      content = update(content);
+      return content;
+    });
+    const app = {
+      workspace: { on: vi.fn(), getLeaf: vi.fn() },
+      vault: {
+        on: vi.fn(),
+        getFileByPath: (path: string) => path === file.path ? file : null,
+        cachedRead: async () => content,
+        process,
+      },
+    } as unknown as App;
+    const leaf = { app, containerEl, contentEl } as unknown as WorkspaceLeaf;
+    const view = new DailyTimelineView(leaf, new DailyNoteDisplayService(() => settings.dailyNoteDates), () => settings);
+    await view.setState({ anchorDate: "2026-08-20" }, {} as never);
+    await openView(view);
+    const day = contentEl.querySelector<HTMLElement>('[data-date="2026-08-20"]');
+    if (mode === "conflict") content = "Added elsewhere\n" + content;
+    const before = content;
+    const checkbox = day?.querySelector<HTMLInputElement>("input[type=checkbox]");
+    // Load the plugin stylesheet in jsdom to catch CSS that blocks real mouse interactions.
+    const style = document.createElement("style");
+    style.textContent = readFileSync("styles.css", "utf8");
+    document.head.appendChild(style);
+    try {
+      expect(checkbox).not.toBeNull();
+      if (!checkbox) throw new Error("Expected a task checkbox");
+      const computed = getComputedStyle(checkbox);
+      expect(computed.pointerEvents).not.toBe("none");
+      expect(computed.cursor).toBe("pointer");
+    } finally {
+      style.remove();
+    }
+    checkbox?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+    checkbox?.click();
+    await vi.waitFor(() => {
+      expect(process).toHaveBeenCalledTimes(1);
+      expect(day?.querySelector<HTMLInputElement>("input[type=checkbox]")?.disabled).toBe(false);
+    });
+    expect(content).toBe(mode === "save" ? before.replace("[ ]", "[x]") : before);
+    expect(day?.querySelector(".dossier-timeline-editor:not(.is-readonly)")).toBeNull();
+    expect(day?.querySelector<HTMLInputElement>("input[type=checkbox]")?.checked).toBe(mode === "save");
+    if (mode === "save") {
+      day?.querySelector<HTMLInputElement>("input[type=checkbox]")?.click();
+      await vi.waitFor(() => expect(content).toBe(before));
+    }
+    await closeView(view);
   });
 
   it("opens a bounded rendered feed around its anchor without backlink footers", async () => {
