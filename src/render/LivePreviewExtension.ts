@@ -6,7 +6,14 @@ import {
   WidgetType,
 } from "@codemirror/view";
 import { editorInfoField, editorLivePreviewField, TFile } from "obsidian";
+import * as obsidian from "obsidian";
+import type { Editor } from "obsidian";
 import { BacklinksRenderer, type RendererHost } from "./BacklinksRenderer";
+
+// Obsidian exposes this field at runtime, but does not include it in its public typings.
+const { editorEditorField } = obsidian as typeof obsidian & {
+  editorEditorField?: StateField<Editor>;
+};
 
 class DossierWidget extends WidgetType {
   private renderer?: BacklinksRenderer;
@@ -57,6 +64,11 @@ function buildDecorations(state: EditorState, host: RendererHost): DecorationSet
   const info = state.field(editorInfoField, false);
   const livePreview = state.field(editorLivePreviewField, false) ?? false;
   if (!livePreview || !(info?.file instanceof TFile)) return Decoration.none;
+  // Table-cell editors inherit the note's file info and Live Preview setting,
+  // but have their own Editor. Only the owning note editor gets a footer.
+  if (editorEditorField && state.field(editorEditorField, false) !== info.editor) {
+    return Decoration.none;
+  }
   return Decoration.set([
     Decoration.widget({
       widget: new DossierWidget(info.file, host),
