@@ -514,7 +514,9 @@ function installObsidianDomHelpers(): void {
     prototype.addClass = function (this: HTMLElement, ...classes: string[]) { this.classList.add(...classes); };
     prototype.removeClass = function (this: HTMLElement, ...classes: string[]) { this.classList.remove(...classes); };
     prototype.toggleClass = function (this: HTMLElement, name: string, force?: boolean) {
-      this.classList.toggle(name, force);
+      // Match Obsidian's helper, which writes even when membership is unchanged.
+      if (force) this.classList.add(name);
+      else this.classList.remove(name);
     };
     prototype.hasClass = function (this: HTMLElement, name: string) { return this.classList.contains(name); };
     prototype.detach = function (this: HTMLElement) { this.remove(); };

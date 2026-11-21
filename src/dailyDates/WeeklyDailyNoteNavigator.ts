@@ -274,8 +274,8 @@ export class WeeklyDailyNoteNavigator extends Component {
     const sticky = this.getSettings().dailyNoteDates.navigator.sticky;
     const host = binding.view.contentEl;
     if (!host.hasClass("dossier-week-nav-host")) host.addClass("dossier-week-nav-host");
-    host.toggleClass("is-sticky", sticky);
-    host.toggleClass("is-scrollaway", !sticky);
+    host.classList.toggle("is-sticky", sticky);
+    host.classList.toggle("is-scrollaway", !sticky);
     if (sticky || binding.deferred) {
       if (binding.root.style.transform) binding.root.style.removeProperty("transform");
       if (binding.root.style.visibility) binding.root.style.removeProperty("visibility");
