@@ -81,6 +81,36 @@ describe("DailyNoteDisplayController", () => {
     expect(tab.querySelector(".workspace-tab-header-inner-title")?.textContent).toBe("August 20, 2026");
     expect(tab.getAttribute("aria-label")).toBe("August 20, 2026");
 
+    // Let the initial formatting mutations settle before simulating iOS tap feedback.
+    await Promise.resolve();
+    vi.mocked(requestAnimationFrame).mock.calls.at(-1)?.[0](0);
+    await Promise.resolve();
+    vi.mocked(requestAnimationFrame).mockClear();
+    const row = explorer.querySelector<HTMLElement>(".nav-file-title")!;
+    const label = row.querySelector<HTMLElement>(".nav-file-title-content")!;
+    const textNode = label.firstChild;
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => mutations.push(...records));
+    observer.observe(label, { attributes: true, childList: true, characterData: true, subtree: true });
+
+    row.classList.add("mobile-tap");
+    await Promise.resolve();
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
+    controller.refreshAll();
+    await Promise.resolve();
+    expect(mutations).toEqual([]);
+    expect(label.firstChild).toBe(textNode);
+    row.classList.remove("mobile-tap");
+    await Promise.resolve();
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
+    observer.disconnect();
+
+    row.classList.add("is-being-renamed");
+    await Promise.resolve();
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+    controller.refreshAll();
+    expect(label.textContent).toBe("2026-08-20");
+
     const inlineTitle = markdown.querySelector<HTMLElement>(".inline-title")!;
     inlineTitle.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
     expect(inlineTitle.textContent).toBe("2026-08-20");

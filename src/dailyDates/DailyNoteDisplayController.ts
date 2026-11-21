@@ -107,13 +107,18 @@ export class DailyNoteDisplayController extends Component {
         if (!container.querySelector(".nav-files-container")) continue;
         current.add(container);
         if (this.explorerObservers.has(container)) continue;
-        const observer = new MutationObserver(() => this.scheduleRefresh());
+        // iOS adds/removes tap-feedback classes before dispatching the click.
+        // Refreshing labels during that gesture can suppress WebKit's click.
+        const observer = new MutationObserver((records) => {
+          if (records.some(isExplorerLabelMutation)) this.scheduleRefresh();
+        });
         observer.observe(container, {
           subtree: true,
           childList: true,
           characterData: true,
           attributes: true,
           attributeFilter: ["data-path", "class", "contenteditable"],
+          attributeOldValue: true,
         });
         this.explorerObservers.set(container, observer);
       }
@@ -261,8 +266,8 @@ export class DailyNoteDisplayController extends Component {
       this.restoreLabel(element, nativeName);
       return;
     }
-    element.setAttribute(LABEL_MARKER, path);
-    element.setAttribute(NATIVE_LABEL, nativeName);
+    if (element.getAttribute(LABEL_MARKER) !== path) element.setAttribute(LABEL_MARKER, path);
+    if (element.getAttribute(NATIVE_LABEL) !== nativeName) element.setAttribute(NATIVE_LABEL, nativeName);
     if (element.textContent !== displayName) element.textContent = displayName;
   }
 
@@ -298,4 +303,13 @@ export class DailyNoteDisplayController extends Component {
 function restoreAttribute(element: HTMLElement, name: string, value: string | null): void {
   if (value === null) element.removeAttribute(name);
   else element.setAttribute(name, value);
+}
+
+function isExplorerLabelMutation(record: MutationRecord): boolean {
+  if (record.type !== "attributes" || record.attributeName !== "class") return true;
+  if (record.target.nodeType !== Node.ELEMENT_NODE) return false;
+  const row = record.target as HTMLElement;
+  if (!row.matches(FILE_ROW_SELECTOR)) return false;
+  const wasRenaming = (record.oldValue ?? "").split(/\s+/).includes("is-being-renamed");
+  return wasRenaming !== row.classList.contains("is-being-renamed");
 }
