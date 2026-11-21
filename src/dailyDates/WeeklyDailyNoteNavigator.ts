@@ -67,6 +67,7 @@ interface NavigatorBinding {
   touchClaimed: boolean;
   suppressClickUntil: number;
   emptyFileProbeGeneration: number;
+  renderKey?: string;
   deferred?: DeferredDailyNote;
 }
 
@@ -96,7 +97,8 @@ export class WeeklyDailyNoteNavigator extends Component {
 
   onload(): void {
     this.registerEvent(this.app.workspace.on("layout-change", () => this.scheduleRefresh()));
-    this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.scheduleRefresh()));
+    // Sidebar pointerdown activates its leaf before iOS dispatches the click.
+    // Activation does not change any navigator input; rebuilding here can swallow that click.
     this.registerEvent(this.app.workspace.on("file-open", () => this.scheduleRefresh()));
     this.registerEvent(this.app.workspace.on("css-change", () => this.scheduleRefresh()));
     this.registerEvent(this.app.vault.on("create", () => this.scheduleRefresh()));
@@ -271,21 +273,25 @@ export class WeeklyDailyNoteNavigator extends Component {
   private applyLayout(binding: NavigatorBinding): void {
     const sticky = this.getSettings().dailyNoteDates.navigator.sticky;
     const host = binding.view.contentEl;
-    host.addClass("dossier-week-nav-host");
+    if (!host.hasClass("dossier-week-nav-host")) host.addClass("dossier-week-nav-host");
     host.toggleClass("is-sticky", sticky);
     host.toggleClass("is-scrollaway", !sticky);
-    binding.root.style.removeProperty("transform");
-    binding.root.style.removeProperty("visibility");
-    if (sticky || binding.deferred) this.unbindScroll(binding);
-    else this.bindScroll(binding);
+    if (sticky || binding.deferred) {
+      if (binding.root.style.transform) binding.root.style.removeProperty("transform");
+      if (binding.root.style.visibility) binding.root.style.removeProperty("visibility");
+      this.unbindScroll(binding);
+    } else this.bindScroll(binding);
     this.updateMeasuredHeight(binding);
   }
 
   private updateMeasuredHeight(binding: NavigatorBinding): void {
     const height = Math.ceil(binding.root.getBoundingClientRect().height);
     if (height > 0) {
-      binding.view.contentEl.style.setProperty("--dossier-week-nav-height", `${height}px`);
-      binding.scrollHandler?.();
+      const host = binding.view.contentEl;
+      if (host.style.getPropertyValue("--dossier-week-nav-height") !== `${height}px`) {
+        host.style.setProperty("--dossier-week-nav-height", `${height}px`);
+        binding.scrollHandler?.();
+      }
     }
   }
 
@@ -324,9 +330,23 @@ export class WeeklyDailyNoteNavigator extends Component {
     const visible = dailyDateFromKey(state.visibleWeekKey);
     if (!selected || !visible) return;
     const settings = this.getSettings().dailyNoteDates.navigator;
+    const today = todayAtStartOfDay();
+    const renderKey = JSON.stringify([
+      state.selectedKey, state.visibleWeekKey, dailyDateKey(today), selected.locale(),
+      settings.showMonthHeader, settings.showTodayIndicator, settings.showExistingNoteIndicators,
+      settings.showExistingNoteIndicators
+        ? Array.from({ length: 21 }, (_, index) => {
+          const date = visible.clone().add(index - 7, "days");
+          return this.app.vault.getFileByPath(this.service.dateToDailyFilePath(date)) !== null;
+        })
+        : [],
+    ]);
+    // Layout and file events can arrive during a sidebar tap. Keep its background
+    // DOM unchanged unless the selected week, settings, or date indicators changed.
+    if (binding.renderKey === renderKey) return;
+    binding.renderKey = renderKey;
     const monthDate = monthForDisplayedWeek(selected, visible);
     binding.monthButton.textContent = monthDate.format("MMMM YYYY");
-    const today = todayAtStartOfDay();
     binding.monthButton.setAttribute("aria-label", `Open today, ${today.format("MMMM D, YYYY")}`);
     binding.monthButton.toggleAttribute("hidden", !settings.showMonthHeader);
     binding.root.toggleClass("has-month-header", settings.showMonthHeader);

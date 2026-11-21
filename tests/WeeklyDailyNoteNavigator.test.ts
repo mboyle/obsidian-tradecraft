@@ -20,6 +20,7 @@ describe("WeeklyDailyNoteNavigator", () => {
   afterEach(() => {
     document.body.empty();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("renders accessible three-page chrome for an eligible Daily Note", () => {
@@ -43,6 +44,65 @@ describe("WeeklyDailyNoteNavigator", () => {
     expect(selected.getAttribute("aria-current")).toBe("date");
     expect(selected.getAttribute("aria-label")).toContain("Thursday, August 20, 2026");
     expect(root.querySelector(".dossier-week-nav-month")?.textContent).toBe("August 2026");
+    harness.controller.onunload();
+  });
+
+  it.each([true, false])("preserves background navigator DOM on sidebar activation (sticky: %s)", async (sticky) => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      x: 0, y: 0, top: 0, left: 0, right: 320, bottom: 64, width: 320, height: 64,
+      toJSON: () => ({}),
+    });
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    }));
+    const flushFrames = () => {
+      for (const callback of frames.splice(0)) callback(0);
+    };
+    const harness = makeHarness(["Daily/2026-08-20.md"]);
+    harness.settings.dailyNoteDates.navigator.sticky = sticky;
+    const { host } = harness.addLeaf("Daily/2026-08-20.md", "preview");
+    harness.controller.onload();
+    flushFrames();
+    await Promise.resolve();
+    const buttons = Array.from(host.querySelectorAll(".dossier-week-nav-date"));
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => mutations.push(...records));
+    observer.observe(host, { subtree: true, childList: true, characterData: true, attributes: true });
+
+    // Obsidian activates the file-explorer leaf on pointerdown, before click.
+    harness.emitWorkspace("active-leaf-change");
+    expect(frames).toHaveLength(0);
+    // Other workspace notifications must also preserve unchanged navigator DOM.
+    harness.emitWorkspace("layout-change");
+    harness.emitWorkspace("file-open");
+    flushFrames();
+    await Promise.resolve();
+    expect(mutations).toEqual([]);
+    Array.from(host.querySelectorAll(".dossier-week-nav-date"))
+      .forEach((button, index) => expect(button).toBe(buttons[index]));
+    observer.disconnect();
+    harness.controller.onunload();
+  });
+
+  it("updates existing-note indicators and settings after an unchanged refresh", () => {
+    const harness = makeHarness(["Daily/2026-08-20.md"]);
+    harness.settings.dailyNoteDates.navigator.showExistingNoteIndicators = true;
+    const { host } = harness.addLeaf("Daily/2026-08-20.md", "preview");
+    harness.controller.refreshAll();
+    const nextDate = () => host.querySelector<HTMLElement>('[data-date="2026-08-21"]')!;
+    const original = nextDate();
+    harness.controller.refreshAll();
+    expect(nextDate()).toBe(original);
+    harness.files.set("Daily/2026-08-21.md", makeTFile("Daily/2026-08-21.md"));
+    harness.controller.refreshAll();
+    expect(nextDate().classList.contains("has-existing-note")).toBe(true);
+    harness.files.delete("Daily/2026-08-21.md");
+    harness.settings.dailyNoteDates.navigator.showMonthHeader = false;
+    harness.controller.refreshAll();
+    expect(nextDate().classList.contains("has-existing-note")).toBe(false);
+    expect(host.querySelector(".dossier-week-nav-month")?.hasAttribute("hidden")).toBe(true);
     harness.controller.onunload();
   });
 
@@ -333,8 +393,14 @@ function makeHarness(paths: string[]) {
       contents.set(file.path, content);
     }),
   };
+  const workspaceListeners = new Map<string, Array<() => void>>();
   const workspace = {
-    on: vi.fn(() => ({ unsubscribe: vi.fn() })),
+    on: vi.fn((event: string, callback: () => void) => {
+      const callbacks = workspaceListeners.get(event) ?? [];
+      callbacks.push(callback);
+      workspaceListeners.set(event, callbacks);
+      return { unsubscribe: vi.fn() };
+    }),
     getLeavesOfType: vi.fn(() => leaves),
   };
   const app = { workspace, vault } as unknown as App;
@@ -347,6 +413,9 @@ function makeHarness(paths: string[]) {
     contents,
     vault,
     controller,
+    emitWorkspace(event: string) {
+      for (const callback of workspaceListeners.get(event) ?? []) callback();
+    },
     addLeaf(path: string, mode: "preview" | "source") {
       const host = document.createElement("div");
       host.className = "workspace-leaf-content";
