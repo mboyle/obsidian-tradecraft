@@ -49,5 +49,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             main.js manifest.json styles.css \
             --verify-tag \
-            --title "Tradecraft $GITHUB_REF_NAME" \
+            --title "Fieldkit $GITHUB_REF_NAME" \
             --notes-file "docs/releases/$GITHUB_REF_NAME.md"

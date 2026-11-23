@@ -312,7 +312,7 @@ function globalBlockCompletions(app: App, sourcePath: string, linkStart: number)
  * Build completion candidates from Obsidian's existing link index instead of
  * requesting every vault path. This covers notes participating in the link
  * graph (including unresolved-link source notes) while keeping unrelated,
- * unlinked vault paths outside Tradecraft's access scope.
+ * unlinked vault paths outside Fieldkit's access scope.
  */
 function timelineMetadataFiles(app: App, sourcePath = ""): TFile[] {
   const paths = new Set<string>();

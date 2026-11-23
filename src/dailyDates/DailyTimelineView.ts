@@ -262,7 +262,7 @@ export class DailyTimelineView extends ItemView {
       if (generation !== day.renderGeneration) return;
       day.el.addClass("has-error");
       day.body.createDiv({ cls: "dossier-timeline-error", text: "Could not load this Daily Note." });
-      console.error("Tradecraft: failed to render a Daily Note in the timeline", error);
+      console.error("Fieldkit: failed to render a Daily Note in the timeline", error);
     }
   }
 
@@ -324,9 +324,9 @@ export class DailyTimelineView extends ItemView {
         // Keep all original content, including the empty-note presentation convention.
         return current.slice(0, from) + (checked ? "[x]" : "[ ]") + current.slice(to);
       });
-      if (conflicted) new Notice("Tradecraft: this daily note changed elsewhere. The task was not changed; try again after it refreshes.");
+      if (conflicted) new Notice("Fieldkit: this daily note changed elsewhere. The task was not changed; try again after it refreshes.");
     } catch (error) {
-      console.error("Tradecraft: failed to toggle a Daily Note task", error);
+      console.error("Fieldkit: failed to toggle a Daily Note task", error);
       new Notice(`Could not save task: ${file.path}`);
     }
     if (day.el.isConnected) await this.renderDay(day);
@@ -352,7 +352,7 @@ export class DailyTimelineView extends ItemView {
         baseContent = await this.app.vault.cachedRead(file);
         content = dailyContentForEditing(baseContent);
       } catch (error) {
-        console.error("Tradecraft: failed to read a Daily Note for editing", error);
+        console.error("Fieldkit: failed to read a Daily Note for editing", error);
         new Notice(`Could not edit Daily Note: ${file.path}`);
         return;
       }
@@ -483,13 +483,13 @@ export class DailyTimelineView extends ItemView {
         });
         if (conflicted) {
           editor.dirty = true;
-          new Notice("Tradecraft: this Daily Note changed elsewhere. Your inline edits remain open and were not overwritten.");
+          new Notice("Fieldkit: this Daily Note changed elsewhere. Your inline edits remain open and were not overwritten.");
           return false;
         }
         editor.baseContent = written;
       } catch (error) {
         editor.dirty = true;
-        console.error("Tradecraft: failed to save an inline Daily Note", error);
+        console.error("Fieldkit: failed to save an inline Daily Note", error);
         new Notice(`Could not save Daily Note: ${file.path}`);
         return false;
       }
@@ -526,7 +526,7 @@ export class DailyTimelineView extends ItemView {
       }
       return true;
     } catch (error) {
-      console.error("Tradecraft: failed to create inline Daily Note", error);
+      console.error("Fieldkit: failed to create inline Daily Note", error);
       new Notice(`Could not create Daily Note: ${this.service.dateToDailyFilePath(editor.day.date)}`);
       return false;
     }
@@ -751,7 +751,7 @@ export class DailyTimelineView extends ItemView {
     if (editor?.file?.path === file.path) {
       if (editor.saving) return;
       if (editor.dirty) {
-        new Notice("Tradecraft: this Daily Note changed elsewhere. Saving will pause until you resolve the inline edit.");
+        new Notice("Fieldkit: this Daily Note changed elsewhere. Saving will pause until you resolve the inline edit.");
         return;
       }
       void this.reloadEditor(editor);
@@ -777,7 +777,7 @@ export class DailyTimelineView extends ItemView {
       editor.baseContent = content;
     } catch (error) {
       editor.suppressUpdates = false;
-      console.debug("Tradecraft: could not refresh an externally modified inline note", error);
+      console.debug("Fieldkit: could not refresh an externally modified inline note", error);
     }
   }
 
@@ -787,7 +787,7 @@ export class DailyTimelineView extends ItemView {
       if (editor.saveTimer !== undefined) editor.day.el.win.clearTimeout(editor.saveTimer);
       editor.view.destroy();
       this.activeEditor = undefined;
-      if (editor.dirty) new Notice("Tradecraft: the Daily Note being edited was deleted; its unsaved inline changes could not be saved.");
+      if (editor.dirty) new Notice("Fieldkit: the Daily Note being edited was deleted; its unsaved inline changes could not be saved.");
     }
     this.refreshPath(path);
   }

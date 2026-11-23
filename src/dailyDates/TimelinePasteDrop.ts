@@ -88,7 +88,7 @@ async function insertAttachments(
       links.push(isEmbeddable(file) ? `!${link}` : link);
     }
   } catch (error) {
-    console.error("Tradecraft: failed to add a timeline attachment", error);
+    console.error("Fieldkit: failed to add a timeline attachment", error);
     return;
   }
   if (!view.dom.isConnected || links.length === 0) return;

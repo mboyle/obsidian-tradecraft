@@ -1,8 +1,8 @@
-# Tradecraft
+# Fieldkit
 
 **A field kit for better backlinks and Daily Notes.**
 
-Tradecraft adds three focused workflows to Obsidian: contextual backlinks that preserve the surrounding thought, human-readable Daily Note dates with compact navigation, and a continuous desktop timeline with inline editing.
+Fieldkit adds three focused workflows to Obsidian: contextual backlinks that preserve the surrounding thought, human-readable Daily Note dates with compact navigation, and a continuous desktop timeline with inline editing.
 
 Everything runs locally inside Obsidian. There are no accounts, network requests, telemetry, or external services.
 
@@ -10,7 +10,7 @@ Everything runs locally inside Obsidian. There are no accounts, network requests
 
 ## Contextual backlinks — understand references in context
 
-Obsidian tells you which notes link here. Tradecraft shows you what you were saying when you made the link.
+Obsidian tells you which notes link here. Fieldkit shows you what you were saying when you made the link.
 
 Linked references appear below the current note as rendered excerpts. Source notes remain one click away, but routine context is readable without leaving the page.
 
@@ -23,7 +23,7 @@ Linked references appear below the current note as rendered excerpts. Source not
 - Supports compact, normal, and expanded context; source grouping; sorting; collapsing; pagination; and folder exclusions
 - Updates after edits, creates, deletes, and renames
 
-Tradecraft does not change either note merely to display a reference. It follows explicit links; unlinked mentions are outside its scope, and embeds are optional.
+Fieldkit does not change either note merely to display a reference. It follows explicit links; unlinked mentions are outside its scope, and embeds are optional.
 
 ## Chronograph — Daily Notes made readable
 
@@ -38,7 +38,7 @@ Readable dates can be enabled independently in:
 
 Chronograph also adds a compact seven-day navigator on mobile and narrow windows. It pages exactly one week per gesture and supports touch, pointer, trackpad, mouse-wheel, and keyboard navigation. Monday- and Sunday-based weeks, sticky placement, reduced motion, and indicators for today, the selected date, and existing notes are configurable.
 
-Selecting a missing date can show the same starter note without immediately creating a file. Tradecraft waits for a meaningful edit, so browsing dates does not fill the vault with empty notes. Existing blank Daily Notes are treated the same way, and matching core Daily Notes settings preserve templates when a note is committed.
+Selecting a missing date can show the same starter note without immediately creating a file. Fieldkit waits for a meaningful edit, so browsing dates does not fill the vault with empty notes. Existing blank Daily Notes are treated the same way, and matching core Daily Notes settings preserve templates when a note is committed.
 
 ## Logbook — a continuous Daily Timeline
 
@@ -88,7 +88,7 @@ Any date can still be opened in a normal Obsidian tab when the complete native e
 
 ## Configuration
 
-Tradecraft's settings cover linked-reference display and context, sorting and date detection, source and target exclusions, readable Daily Note surfaces, filename and display formats, week navigation, deferred note creation, and the timeline's startup and loaded-window behavior.
+Fieldkit's settings cover linked-reference display and context, sorting and date detection, source and target exclusions, readable Daily Note surfaces, filename and display formats, week navigation, deferred note creation, and the timeline's startup and loaded-window behavior.
 
 To explicitly hide or show contextual references on one note, set:
 
@@ -102,17 +102,19 @@ An explicit frontmatter value takes precedence over the global setting and comma
 
 ## Installation
 
-Until Tradecraft is available in Obsidian's Community Plugins directory, install a release manually:
+Fieldkit was previously named Tradecraft. While the directory listing is being updated, find it under **Tradecraft** in Obsidian's **Settings → Community plugins → Browse**.
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/mboyle/obsidian-tradecraft/releases/latest).
+To install a release manually:
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/tradecraftso/fieldkit/releases/latest).
 2. Put them in `<your-vault>/.obsidian/plugins/tradecraft/`.
 3. Reload Obsidian and enable the plugin under **Settings → Community plugins**.
 
 ## Privacy
 
-Tradecraft is deterministic and local. It makes no network requests, collects no telemetry, and sends no vault content anywhere.
+Fieldkit is deterministic and local. It makes no network requests, collects no telemetry, and sends no vault content anywhere.
 
-To provide contextual backlinks and native-feeling link, tag, heading, and block suggestions, Tradecraft enumerates Markdown file paths and Obsidian's cached metadata across the vault. It reads note contents only when needed to render or edit the notes and references currently in use.
+To provide contextual backlinks and native-feeling link, tag, heading, and block suggestions, Fieldkit enumerates Markdown file paths and Obsidian's cached metadata across the vault. It reads note contents only when needed to render or edit the notes and references currently in use.
 
 ## Development
 
@@ -124,6 +126,8 @@ npm run dev
 npm run check
 npm run bench
 ```
+
+The installed plugin ID remains `tradecraft` to preserve existing settings and updates. The requested community slug `fieldkit` requires an Obsidian administrator; do not rename your installed plugin folder yet.
 
 For local development, place or symlink this repository at `<your-vault>/.obsidian/plugins/tradecraft/`, run `npm run dev`, and reload Obsidian.
 

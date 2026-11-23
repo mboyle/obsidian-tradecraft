@@ -5,7 +5,7 @@ import { builtinModules } from "node:module";
 const production = process.argv[2] === "production";
 const context = await esbuild.context({
   banner: {
-    js: "/* Dossier: generated bundle. Source lives in this repository. */",
+    js: "/* Fieldkit: generated bundle. Source lives in this repository. */",
   },
   entryPoints: ["src/main.ts"],
   bundle: true,

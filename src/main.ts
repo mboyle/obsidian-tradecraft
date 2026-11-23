@@ -57,7 +57,7 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
     ));
 
     this.addSettingTab(new DossierSettingTab(this.app, this));
-    this.registerHoverLinkSource("dossier", { display: "Tradecraft", defaultMod: false });
+    this.registerHoverLinkSource("dossier", { display: "Fieldkit", defaultMod: false });
     this.registerMarkdownPostProcessor(this.readingRenderer.postProcessor, 100);
     this.registerEditorExtension(createLivePreviewExtension(this));
     this.registerCommands();
@@ -303,7 +303,7 @@ export default class DossierPlugin extends Plugin implements RendererHost, Setti
     const frontmatter: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter;
     const frontmatterValue = recordValue(frontmatter, "contextual-backlinks");
     if (typeof frontmatterValue === "boolean") {
-      new Notice("Tradecraft: this note is controlled by its contextual-backlinks property.");
+      new Notice("Fieldkit: this note is controlled by its contextual-backlinks property.");
       return;
     }
     this.settings.noteOverrides[file.path] = !this.service.shouldRender(file);

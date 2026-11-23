@@ -3,7 +3,7 @@ import type moment from "moment";
 
 /**
  * Obsidian supplies Moment at runtime. Its public re-export is intentionally
- * converted through `unknown` once so the rest of Tradecraft retains Moment's
+ * converted through `unknown` once so the rest of Fieldkit retains Moment's
  * complete static and instance types without propagating an `any` boundary.
  */
 const rawObsidianMoment: unknown = obsidianMomentExport;

@@ -70,7 +70,7 @@ export class DailyNoteFileResolver {
         file: expectedFile,
       };
     } catch (error) {
-      console.error("Tradecraft: Daily Notes creation failed", error);
+      console.error("Fieldkit: Daily Notes creation failed", error);
       return { available: true, file: null };
     }
   }
@@ -84,7 +84,7 @@ export class DailyNoteFileResolver {
     } catch (error) {
       const raced = this.app.vault.getFileByPath(path);
       if (raced) return raced;
-      console.error("Tradecraft: blank Daily Note creation failed", error);
+      console.error("Fieldkit: blank Daily Note creation failed", error);
       new Notice(`Could not create Daily Note: ${path}`);
       return null;
     }
@@ -96,7 +96,7 @@ export class DailyNoteFileResolver {
       if (content.length === 0) await this.app.vault.modify(file, DAILY_NOTE_STARTER);
     } catch (error) {
       // Note creation succeeded; a failed convenience stub must not block navigation.
-      console.debug("Tradecraft: could not add the Daily Note starter bullet", error);
+      console.debug("Fieldkit: could not add the Daily Note starter bullet", error);
     }
   }
 

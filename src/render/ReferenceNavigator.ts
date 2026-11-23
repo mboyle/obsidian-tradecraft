@@ -27,7 +27,7 @@ export class ReferenceNavigator {
         });
         view = leaf.view;
       } catch (error) {
-        console.debug("[Dossier] Could not switch source to Live Preview for exact navigation", error);
+        console.debug("[Fieldkit] Could not switch source to Live Preview for exact navigation", error);
       }
     }
 
