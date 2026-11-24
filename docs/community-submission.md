@@ -4,7 +4,7 @@ Obsidian does not require a second long-form marketing page. The Community direc
 
 ## Directory metadata
 
-The public product name is **Fieldkit**. The installed plugin ID remains `tradecraft` until Obsidian coordinates any identifier migration. The manifest metadata is:
+The public product name is **Fieldkit**. The installed plugin ID and community URL slug remain `tradecraft` to preserve existing settings and updates. The manifest metadata is:
 
 ```json
 {
@@ -44,3 +44,15 @@ The README includes desktop and iPhone captures for contextual linked references
 ### Admin request
 
 I am Michael Boyle (`mboyle`), the original author and owner of the Tradecraft Obsidian plugin (current ID `tradecraft`). Please update its public name to Fieldkit and its repository from `mboyle/obsidian-tradecraft` to `tradecraftso/fieldkit`. I authorize this move and administer the destination organization. I also request the community URL slug `fieldkit`. If this requires changing the published plugin ID, please advise on the supported migration before changing it; the release manifest currently retains `tradecraft` so existing users can continue updating.
+
+## Moderator guidance and final identity — November 24, 2026
+
+[Obsidian moderator Zachatoo replied](https://discord.com/channels/686053708261228577/1574548198364676116) on November 23 that the community URL slug must match the installed plugin ID and IDs of published plugins cannot be changed. A new `fieldkit` ID would require publishing a separate plugin. The listing name can be changed by the owner in the community directory, and the directory should automatically follow the transferred GitHub repository.
+
+On November 24, Michael accepted retaining `tradecraft` and authorized updating the existing listing name and verifying its repository. This supersedes the earlier request for a `fieldkit` slug; no separate plugin will be published as part of this migration. The intended final identity is:
+
+- Public name: **Fieldkit**
+- Installed plugin ID and community URL slug: `tradecraft`
+- Repository: `tradecraftso/fieldkit`
+
+Keep the original admin request above as history. Verify the live community listing before reporting its display name or repository mapping as updated.

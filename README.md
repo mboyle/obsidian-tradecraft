@@ -127,7 +127,7 @@ npm run check
 npm run bench
 ```
 
-The installed plugin ID remains `tradecraft` to preserve existing settings and updates. The requested community slug `fieldkit` requires an Obsidian administrator; do not rename your installed plugin folder yet.
+The installed plugin ID and community URL slug remain `tradecraft` to preserve existing settings and updates. Fieldkit is the public product name. Keep the installed plugin folder named `tradecraft`.
 
 For local development, place or symlink this repository at `<your-vault>/.obsidian/plugins/tradecraft/`, run `npm run dev`, and reload Obsidian.
 
