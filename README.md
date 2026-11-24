@@ -102,7 +102,7 @@ An explicit frontmatter value takes precedence over the global setting and comma
 
 ## Installation
 
-Fieldkit was previously named Tradecraft. While the directory listing is being updated, find it under **Tradecraft** in Obsidian's **Settings → Community plugins → Browse**.
+Find **Fieldkit** in Obsidian's **Settings → Community plugins → Browse**, or open its [community listing](https://community.obsidian.md/plugins/tradecraft). Fieldkit was previously named Tradecraft and retains the `tradecraft` plugin ID so existing installations keep their settings and updates.
 
 To install a release manually:
 

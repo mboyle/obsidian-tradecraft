@@ -56,3 +56,7 @@ On November 24, Michael accepted retaining `tradecraft` and authorized updating 
 - Repository: `tradecraftso/fieldkit`
 
 Keep the original admin request above as history. Verify the live community listing before reporting its display name or repository mapping as updated.
+
+### Live listing verification — November 24, 2026
+
+The existing [community listing](https://community.obsidian.md/plugins/tradecraft) now displays **Fieldkit**. Its **View on GitHub**, **Report bug**, and **Request feature** links point to `tradecraftso/fieldkit`. The install link still uses `obsidian://show-plugin?id=tradecraft`. A manual **Check for new releases** detected manifest version 0.4.9 and queued its scan; the public current-version field still showed 0.4.8 when this verification was recorded.
