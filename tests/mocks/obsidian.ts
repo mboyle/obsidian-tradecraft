@@ -1,4 +1,9 @@
 import moment from "moment";
+import { StateField } from "@codemirror/state";
+
+export const editorInfoField = StateField.define<{ file: TFile | null; editor: object } | null>({ create: () => null, update: (value) => value });
+export const editorEditorField = StateField.define<object | null>({ create: () => null, update: (value) => value });
+export const editorLivePreviewField = StateField.define<boolean>({ create: () => false, update: (value) => value });
 
 export { moment };
 
